@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Khách đến thăm{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Khách đến thăm sinh viên</h1>
+    <p class="text-muted mb-0">Thống kê theo tuần (thứ Hai–Chủ nhật) hoặc theo tháng, kèm số lần mỗi khách đến chơi.</p>
+  </div>
+</div>
+
+<form class="filter" method="get">
+  <div><label class="form-label">Thống kê theo</label>
+    <select class="form-select" name="kieu">
+      <option value="tuan" {% if kieu == 'tuan' %}selected{% endif %}>Tuần</option>
+      <option value="thang" {% if kieu == 'thang' %}selected{% endif %}>Tháng</option>
+    </select></div>
+  <div><label class="form-label">Chọn một ngày trong kỳ</label>
+    <input class="form-control" type="date" name="ngay" value="{{ ngay.isoformat() }}"></div>
+  <button class="btn btn-primary">Xem</button>
+  <button class="btn btn-outline-secondary" name="csv" value="1">Xuất CSV</button>
+</form>
+
+<p class="text-muted">Kỳ thống kê: <b>{{ first|dmy }}</b> → <b>{{ last|dmy }}</b> · Tổng <b>{{ tong_lan }}</b> lượt thăm</p>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead><tr><th>Sinh viên</th><th>Lớp</th><th>Phòng</th><th>CMT khách</th><th>Tên khách</th>
+        <th>Ngày sinh</th><th class="text-end">Số lần đến</th><th>Các ngày đến</th></tr></thead>
+      <tbody>
+      {% for r in rows %}
+        <tr>
+          <td><b>{{ r.TenSV }}</b> <span class="text-muted small">{{ r.MaSV }}</span></td>
+          <td>{{ r.Lop }}</td><td>{{ r.SoPhong|fmt }}</td><td>{{ r.SoCMT }}</td><td>{{ r.TenKhach }}</td>
+          <td>{{ r.NgaySinh|fmt('date') }}</td>
+          <td class="text-end"><span class="badge bg-primary">{{ r.SoLan }}</span></td>
+          <td>{{ r.CacNgay }}</td>
+        </tr>
+      {% else %}
+        <tr><td colspan="8" class="text-center text-muted py-4">Không có khách đến thăm trong kỳ này.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
