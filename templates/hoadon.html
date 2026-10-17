@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Hóa đơn {{ b.MaSV }}{% endblock %}
+{% block content %}
+<div class="page-head no-print">
+  <div><h1>Hóa đơn sinh viên</h1></div>
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-secondary" href="/bao-cao/hoa-don?thang={{ thang }}&nam={{ nam }}">← Danh sách</a>
+    <button class="btn btn-primary" onclick="window.print()">In hóa đơn</button>
+  </div>
+</div>
+
+<div class="card invoice">
+  <div class="card-body">
+    <div class="text-center mb-4">
+      <h2 class="h4 mb-1">HÓA ĐƠN KÝ TÚC XÁ</h2>
+      <div class="text-muted">Tháng {{ thang }}/{{ nam }}</div>
+    </div>
+    <div class="row mb-4">
+      <div class="col-sm-6">
+        <div><b>Sinh viên:</b> {{ b.HoTen }} ({{ b.MaSV }})</div>
+        <div><b>Lớp:</b> {{ b.Lop }}</div>
+        <div><b>Quê quán:</b> {{ b.QueQuan }}</div>
+      </div>
+      <div class="col-sm-6">
+        <div><b>Phòng:</b> {{ b.SoPhong }}{% if phong %} · {{ phong.LoaiPhong }}{% endif %}</div>
+        <div><b>Bắt đầu ở:</b> {{ b.NgayBatDauO|dmy or '—' }}</div>
+      </div>
+    </div>
+
+    <h3 class="h6">1. Tiền phòng (tính chẵn tháng)</h3>
+    <table class="table table-sm">
+      <tr><td>{% if phong %}Phòng {{ phong.SoPhong }} – {{ phong.LoaiPhong }}{% else %}Chưa xếp phòng{% endif %}</td>
+          <td class="text-end">{{ b.TienPhong|vnd }}</td></tr>
+    </table>
+
+    <h3 class="h6">2. Dịch vụ sử dụng</h3>
+    <table class="table table-sm">
+      <thead><tr><th>Thời gian</th><th>Dịch vụ</th><th class="text-end">Đơn giá</th><th class="text-end">SL</th><th class="text-end">Thành tiền</th></tr></thead>
+      <tbody>
+      {% for d in dv %}
+        <tr><td>{{ d.ThoiGianSuDung|fmt('datetime') }}</td><td>{{ d.TenDV }}</td>
+            <td class="text-end">{{ d.DonGia|vnd }}</td><td class="text-end">{{ d.SoLuong }}</td>
+            <td class="text-end">{{ d.ThanhTien|vnd }}</td></tr>
+      {% else %}<tr><td colspan="5" class="text-muted">Không sử dụng dịch vụ trong tháng.</td></tr>{% endfor %}
+      </tbody>
+      <tfoot><tr><td colspan="4" class="text-end fw-bold">Cộng dịch vụ</td><td class="text-end fw-bold">{{ b.TienDichVu|vnd }}</td></tr></tfoot>
+    </table>
+
+    <h3 class="h6">3. Vé xe tháng</h3>
+    <table class="table table-sm">
+      <tbody>
+      {% for x in xe %}
+        <tr><td>{{ x.MaXeThang }} · {{ x.BienSoXe }} ({{ x.LoaiXe }})</td><td class="text-end">{{ x.GiaVeThang|vnd }}</td></tr>
+      {% else %}<tr><td colspan="2" class="text-muted">Không đăng ký xe vé tháng.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+
+    <h3 class="h6">4. Phụ phí gửi/lấy xe quá 2 lượt/ngày</h3>
+    <table class="table table-sm">
+      <tbody>
+      {% for p in pp %}
+        <tr><td>{{ p.NgayGiaoDich|dmy }} · {{ p.BienSoXe }} ({{ p.SoLuot }} lượt trong ngày)</td><td class="text-end">{{ p.PhuPhi|vnd }}</td></tr>
+      {% else %}<tr><td colspan="2" class="text-muted">Không phát sinh phụ phí.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+
+    <div class="invoice-total">
+      <span>TỔNG THANH TOÁN</span><b>{{ b.TongCong|vnd }}</b>
+    </div>
+  </div>
+</div>
+{% endblock %}

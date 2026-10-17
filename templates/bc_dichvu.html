@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Dịch vụ theo khoảng ngày{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Dịch vụ sinh viên đã sử dụng</h1>
+    <p class="text-muted mb-0">Tên dịch vụ và tổng tiền mỗi dịch vụ trong khoảng từ ngày – đến ngày.</p>
+  </div>
+</div>
+
+<form class="filter" method="get">
+  <div><label class="form-label">Từ ngày</label><input class="form-control" type="date" name="tu" value="{{ tu.isoformat() }}"></div>
+  <div><label class="form-label">Đến ngày</label><input class="form-control" type="date" name="den" value="{{ den.isoformat() }}"></div>
+  <div class="grow"><label class="form-label">Sinh viên</label>
+    <select class="form-select" name="masv">
+      <option value="">Tất cả sinh viên</option>
+      {% for s in svs %}<option value="{{ s.v }}" {% if s.v == masv %}selected{% endif %}>{{ s.l }}</option>{% endfor %}
+    </select></div>
+  <button class="btn btn-primary">Xem</button>
+  <button class="btn btn-outline-secondary" name="csv" value="1">Xuất CSV</button>
+</form>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table align-middle mb-0">
+      <thead><tr><th>Sinh viên</th><th>Lớp</th><th>Quê quán</th><th>Dịch vụ</th>
+        <th class="text-end">Đơn giá</th><th class="text-end">Tổng SL</th><th class="text-end">Tổng tiền</th></tr></thead>
+      <tbody>
+      {% for g in rows|groupby('MaSV') %}
+        {% for r in g.list %}
+        <tr>
+          {% if loop.first %}
+            <td rowspan="{{ g.list|length + 1 }}" class="bg-light"><b>{{ r.HoTen }}</b><br><span class="text-muted small">{{ r.MaSV }}</span></td>
+            <td rowspan="{{ g.list|length + 1 }}" class="bg-light">{{ r.Lop }}</td>
+            <td rowspan="{{ g.list|length + 1 }}" class="bg-light">{{ r.QueQuan }}</td>
+          {% endif %}
+          <td>{{ r.TenDV }}</td>
+          <td class="text-end">{{ r.DonGia|vnd }}</td>
+          <td class="text-end">{{ r.TongSoLuong }}</td>
+          <td class="text-end">{{ r.TongTien|vnd }}</td>
+        </tr>
+        {% endfor %}
+        <tr class="table-light"><td colspan="3" class="text-end fw-semibold">Cộng {{ g.list[0].HoTen }}</td>
+          <td class="text-end fw-semibold">{{ g.list|sum(attribute='TongTien')|vnd }}</td></tr>
+      {% else %}
+        <tr><td colspan="7" class="text-center text-muted py-4">Không có dữ liệu trong khoảng thời gian này.</td></tr>
+      {% endfor %}
+      </tbody>
+      {% if rows %}<tfoot><tr class="fw-bold"><td colspan="6" class="text-end">TỔNG CỘNG</td><td class="text-end">{{ total|vnd }}</td></tr></tfoot>{% endif %}
+    </table>
+  </div>
+</div>
+{% endblock %}
