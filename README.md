@@ -63,14 +63,6 @@ ktx-app/
 - Trigger MySQL vẫn là nơi bảo vệ dữ liệu chính; app kiểm tra thêm khi **sửa** (trigger gốc chỉ chạy khi INSERT) và tự đánh số lại lượt gửi xe trong ngày khi sửa/xóa lượt.
 - Trang web dùng CDN cho Bootstrap/Chart.js nên cần Internet khi mở giao diện.
 
-## Đưa lên GitHub
-
-```bash
-git init && git add . && git commit -m "KTX management app"
-git branch -M main
-git remote add origin https://github.com/<ten-ban>/<ten-repo>.git
-git push -u origin main
-```
 ## Chạy chương trình bằng file exe :
 ` 
 Tải file exe, file zip từ file dist
