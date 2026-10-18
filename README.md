@@ -71,3 +71,8 @@ git branch -M main
 git remote add origin https://github.com/<ten-ban>/<ten-repo>.git
 git push -u origin main
 ```
+## Chạy chương trình bằng file exe :
+` 
+Tải file exe, file zip từ file dist
+Mở file exe, giải nén file zip để có thể bắt đầu dùng
+`
