@@ -1,41 +1,177 @@
 # -*- coding: utf-8 -*-
-"""Ứng dụng web quản lý Ký túc xá sinh viên (Flask + MySQL).
+"""Ứng dụng Desktop Quản lý Ký túc xá sinh viên (Flask + SQLite + PyWebView).
 
-Chạy:  python app.py   →  http://127.0.0.1:5000
+Đóng gói PyInstaller:
+    pyinstaller --noconsole --onefile --add-data "templates;templates" --add-data "static;static" app.py
 """
 import csv
 import datetime as dt
 import io
 import os
+import sqlite3
+import sys
+import threading
 from decimal import Decimal
 
-import pymysql
+import webview
 from flask import (Flask, Response, abort, flash, g, redirect, render_template,
                    request)
 from markupsafe import Markup, escape
-from pymysql.cursors import DictCursor
 
-app = Flask(__name__)
+# ----------------------------------------------------------------------------
+# Cấu hình đường dẫn cho PyInstaller & Database (Giải pháp B: AppData)
+# ----------------------------------------------------------------------------
+if getattr(sys, 'frozen', False):
+    # Nếu là file .exe đóng gói bằng PyInstaller
+    BASE_DIR = os.path.dirname(sys.executable)
+    template_folder = os.path.join(sys._MEIPASS, 'templates')
+    static_folder = os.path.join(sys._MEIPASS, 'static')
+    app = Flask(__name__, template_folder=template_folder, static_folder=static_folder)
+else:
+    # Nếu chạy script .py bình thường
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    app = Flask(__name__)
+
+# Lưu trữ database tại thư mục AppData của người dùng (Solution B)
+# Giúp dữ liệu luôn bền vững, tránh lỗi phân quyền UAC hoặc thư mục chỉ đọc.
+APPDATA_DIR = os.path.join(os.environ.get('APPDATA', BASE_DIR), 'KTXManager')
+os.makedirs(APPDATA_DIR, exist_ok=True)
+DB_PATH = os.path.join(APPDATA_DIR, "ktx.db")
+
 app.secret_key = os.environ.get("SECRET_KEY", "ktx-dev-secret-key")
 
-DB_CONFIG = dict(
-    host=os.environ.get("DB_HOST", "localhost"),
-    port=int(os.environ.get("DB_PORT", "3306")),
-    user=os.environ.get("DB_USER", "root"),
-    password=os.environ.get("DB_PASSWORD", ""),
-    database=os.environ.get("DB_NAME", "ktx"),
-    charset="utf8mb4",
-    cursorclass=DictCursor,
-)
+
+# --- BƯỚC 2: HÀM TỰ ĐỘNG TẠO/SỬA DATABASE HOÀN CHỈNH ---
+def init_db_if_not_exists():
+    # Tự động tạo thư mục nếu chưa tồn tại
+    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+    
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    cur.execute("PRAGMA foreign_keys = ON;")
+    
+    # Kiểm tra xem bảng SinhVien đã tồn tại chưa
+    cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='SinhVien';")
+    if not cur.fetchone():
+        cur.executescript("""
+        CREATE TABLE IF NOT EXISTS Phong (
+            MaPhong TEXT PRIMARY KEY,
+            SoPhong TEXT NOT NULL UNIQUE,
+            LoaiPhong TEXT NOT NULL,
+            DonGia DECIMAL(12, 2) NOT NULL CHECK (DonGia >= 0),
+            SoNguoiToiDa INTEGER NOT NULL CHECK (SoNguoiToiDa > 0)
+        );
+
+        CREATE TABLE IF NOT EXISTS SinhVien (
+            MaSV TEXT PRIMARY KEY,
+            SoCMT TEXT NOT NULL UNIQUE,
+            HoTen TEXT NOT NULL,
+            NgaySinh TEXT NOT NULL,
+            Lop TEXT NOT NULL,
+            QueQuan TEXT NOT NULL,
+            MaPhong TEXT,
+            NgayBatDauO TEXT,
+            FOREIGN KEY (MaPhong) REFERENCES Phong(MaPhong) ON DELETE SET NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS KhachTham (
+            MaKhach INTEGER PRIMARY KEY AUTOINCREMENT,
+            SoCMT TEXT NOT NULL,
+            HoTen TEXT NOT NULL,
+            NgaySinh TEXT,
+            MaSV TEXT NOT NULL,
+            NgayDenChoi TEXT NOT NULL,
+            FOREIGN KEY (MaSV) REFERENCES SinhVien(MaSV) ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS DichVu (
+            MaDV TEXT PRIMARY KEY,
+            TenDV TEXT NOT NULL,
+            DonGia DECIMAL(12, 2) NOT NULL CHECK (DonGia >= 0)
+        );
+
+        CREATE TABLE IF NOT EXISTS SuDungDichVu (
+            MaSDDV INTEGER PRIMARY KEY AUTOINCREMENT,
+            MaSV TEXT NOT NULL,
+            MaDV TEXT NOT NULL,
+            ThoiGianSuDung TEXT NOT NULL,
+            SoLuong INTEGER NOT NULL DEFAULT 1 CHECK (SoLuong > 0),
+            ThanhTien DECIMAL(12, 2) NOT NULL CHECK (ThanhTien >= 0),
+            FOREIGN KEY (MaSV) REFERENCES SinhVien(MaSV) ON DELETE CASCADE,
+            FOREIGN KEY (MaDV) REFERENCES DichVu(MaDV) ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS XeThang (
+            MaXeThang TEXT PRIMARY KEY,
+            MaSV TEXT NOT NULL,
+            BienSoXe TEXT NOT NULL,
+            LoaiXe TEXT NOT NULL,
+            NgayDangKy TEXT NOT NULL,
+            GiaVeThang DECIMAL(12, 2) NOT NULL DEFAULT 100000.00,
+            TrangThai INTEGER NOT NULL DEFAULT 1,
+            FOREIGN KEY (MaSV) REFERENCES SinhVien(MaSV) ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS LuotGuiXe (
+            MaLuot INTEGER PRIMARY KEY AUTOINCREMENT,
+            MaXeThang TEXT NOT NULL,
+            ThoiGianVao TEXT NOT NULL,
+            ThoiGianRa TEXT,
+            NgayGiaoDich TEXT NOT NULL,
+            SoLieuLuotTrongNgay INTEGER NOT NULL DEFAULT 1,
+            PhuPhiPhatSinh DECIMAL(12, 2) NOT NULL DEFAULT 0.00,
+            FOREIGN KEY (MaXeThang) REFERENCES XeThang(MaXeThang) ON DELETE CASCADE
+        );
+
+        -- Thêm dữ liệu mẫu ban đầu
+        INSERT OR IGNORE INTO Phong VALUES ('P101', '101', 'Phòng 4 người (Điều hòa)', 1200000.00, 4);
+        INSERT OR IGNORE INTO Phong VALUES ('P102', '102', 'Phòng 6 người (Quạt)', 800000.00, 6);
+        INSERT OR IGNORE INTO Phong VALUES ('P201', '201', 'Phòng 2 người (VIP)', 2000000.00, 2);
+
+        INSERT OR IGNORE INTO SinhVien VALUES ('SV001', '001202001111', 'Nguyễn Văn An', '2004-05-15', 'CNTT1-K17', 'Hà Nội', 'P101', '2024-09-01');
+        INSERT OR IGNORE INTO SinhVien VALUES ('SV002', '001202002222', 'Trần Thị Bình', '2004-08-20', 'ATTT2-K17', 'Nam Định', 'P101', '2024-09-01');
+        INSERT OR IGNORE INTO SinhVien VALUES ('SV003', '001202003333', 'Lê Hoàng Cường', '2005-02-10', 'DVT1-K18', 'Hải Phòng', 'P102', '2025-09-01');
+        INSERT OR IGNORE INTO SinhVien VALUES ('SV004', '001202004444', 'Phạm Minh Đức', '2005-11-05', 'CNTT2-K18', 'Nghệ An', 'P201', '2025-09-01');
+
+        INSERT OR IGNORE INTO KhachTham (SoCMT, HoTen, NgaySinh, MaSV, NgayDenChoi) VALUES ('001199005555', 'Nguyễn Văn Nam', '1980-01-01', 'SV001', '2026-10-05');
+        INSERT OR IGNORE INTO KhachTham (SoCMT, HoTen, NgaySinh, MaSV, NgayDenChoi) VALUES ('001199006666', 'Trần Văn Hùng', '1978-04-12', 'SV002', '2026-10-10');
+
+        INSERT OR IGNORE INTO DichVu VALUES ('DV01', 'Giặt là', 15000.00);
+        INSERT OR IGNORE INTO DichVu VALUES ('DV02', 'Ăn sáng / Cơm ca', 30000.00);
+        INSERT OR IGNORE INTO DichVu VALUES ('DV03', 'Cho thuê xe đạp', 20000.00);
+        INSERT OR IGNORE INTO DichVu VALUES ('DV04', 'Rửa xe', 25000.00);
+
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV001', 'DV01', '2026-10-05 08:30:00', 3, 45000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV001', 'DV02', '2026-10-10 12:00:00', 5, 150000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV002', 'DV01', '2026-10-06 09:15:00', 2, 30000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV002', 'DV03', '2026-10-12 14:00:00', 1, 20000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV003', 'DV02', '2026-10-15 18:30:00', 10, 300000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV004', 'DV04', '2026-10-08 10:00:00', 2, 50000.00);
+
+        INSERT OR IGNORE INTO XeThang VALUES ('XT01', 'SV001', '29-A1 123.45', 'Xe máy Wave', '2026-09-01', 100000.00, 1);
+        INSERT OR IGNORE INTO XeThang VALUES ('XT02', 'SV001', '29-MD 888.88', 'Xe điện VinFast', '2026-09-15', 100000.00, 1);
+        INSERT OR IGNORE INTO XeThang VALUES ('XT03', 'SV002', '18-B2 567.89', 'Xe máy Vision', '2026-09-01', 100000.00, 1);
+
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT01', '2026-10-10 07:00:00', '2026-10-10 09:00:00', '2026-10-10', 1, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT01', '2026-10-10 10:00:00', '2026-10-10 12:00:00', '2026-10-10', 2, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT01', '2026-10-10 13:00:00', '2026-10-10 15:00:00', '2026-10-10', 3, 3000.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT01', '2026-10-10 17:00:00', '2026-10-10 21:00:00', '2026-10-10', 4, 3000.00);
+        """)
+        conn.commit()
+    conn.close()
+
+# TỰ ĐỘNG GỌI HÀM NÀY NGAY KHI APP ĐÓNG GÓI HOẶC PHÁT HÀNH CHẠY
+init_db_if_not_exists()
 
 # ----------------------------------------------------------------------------
-# Kết nối & tiện ích
+# Kết nối & tiện ích Database
 # ----------------------------------------------------------------------------
-
-
 def get_db():
     if "db" not in g:
-        g.db = pymysql.connect(**DB_CONFIG)
+        conn = sqlite3.connect(DB_PATH)
+        conn.row_factory = sqlite3.Row
+        conn.execute("PRAGMA foreign_keys = ON;")
+        g.db = conn
     return g.db
 
 
@@ -46,24 +182,38 @@ def close_db(_exc):
         db.close()
 
 
+def exec_sql(cur, sql, args=None):
+    if args is not None:
+        if isinstance(args, dict):
+            for k in args:
+                sql = sql.replace(f"%({k})s", f":{k}")
+            cur.execute(sql, args)
+        else:
+            sql = sql.replace("%s", "?")
+            cur.execute(sql, args)
+    else:
+        cur.execute(sql)
+
+
 def query(sql, args=None, one=False):
-    with get_db().cursor() as cur:
-        cur.execute(sql, args)
-        return cur.fetchone() if one else cur.fetchall()
+    with get_db() as conn:
+        cur = conn.cursor()
+        exec_sql(cur, sql, args)
+        if one:
+            r = cur.fetchone()
+            return dict(r) if r else None
+        return [dict(r) for r in cur.fetchall()]
 
 
 def db_message(e):
-    code = e.args[0] if e.args else 0
-    msg = e.args[1] if len(e.args) > 1 else str(e)
-    if code == 1062:
+    msg = str(e)
+    if "UNIQUE constraint failed" in msg:
         return "Dữ liệu bị trùng (mã hoặc số CMT đã tồn tại)."
-    if code == 1451:
-        return "Không thể xóa vì dữ liệu đang được tham chiếu ở bảng khác."
-    if code == 1452:
-        return "Giá trị tham chiếu không tồn tại (sinh viên / phòng / dịch vụ / xe)."
-    if code in (3819, 4025):
-        return "Giá trị không hợp lệ (vi phạm ràng buộc CHECK: số phải >= 0 / > 0)."
-    return msg  # gồm cả thông báo từ TRIGGER (SIGNAL SQLSTATE '45000')
+    if "FOREIGN KEY constraint failed" in msg:
+        return "Không thể xóa hoặc cập nhật vì dữ liệu đang được tham chiếu ở bảng khác."
+    if "CHECK constraint failed" in msg:
+        return "Giá trị không hợp lệ (vi phạm ràng buộc số phải >= 0 / > 0)."
+    return msg
 
 
 def today():
@@ -92,7 +242,6 @@ def arg_date(name, default):
 
 
 def to_input(v):
-    """Chuyển giá trị DB thành chuỗi cho ô <input>."""
     if v is None:
         return ""
     if isinstance(v, dt.datetime):
@@ -116,7 +265,7 @@ def csv_response(filename, headers, rows):
             out.append(v)
         w.writerow(out)
     return Response(
-        "﻿" + buf.getvalue(),  # BOM để Excel đọc đúng tiếng Việt
+        "\ufeff" + buf.getvalue(),
         mimetype="text/csv; charset=utf-8",
         headers={"Content-Disposition": f"attachment; filename={filename}"},
     )
@@ -125,8 +274,6 @@ def csv_response(filename, headers, rows):
 # ----------------------------------------------------------------------------
 # Bộ lọc Jinja
 # ----------------------------------------------------------------------------
-
-
 @app.template_filter("vnd")
 def vnd(v):
     if v is None:
@@ -182,8 +329,6 @@ def inject_nav():
 # ----------------------------------------------------------------------------
 # CRUD tổng quát cho các bảng
 # ----------------------------------------------------------------------------
-
-
 def F(name, label, type="text", required=True, **kw):
     return dict(name=name, label=label, type=type, required=required, **kw)
 
@@ -192,11 +337,11 @@ def C(key, label, kind="text"):
     return dict(key=key, label=label, kind=kind)
 
 
-OPT_SV = "SELECT MaSV AS v, CONCAT(MaSV, ' - ', HoTen) AS l FROM SinhVien ORDER BY MaSV"
-OPT_PHONG = ("SELECT MaPhong AS v, CONCAT('Phòng ', SoPhong, ' - ', LoaiPhong, ' (tối đa ', SoNguoiToiDa, ' người)') AS l "
+OPT_SV = "SELECT MaSV AS v, MaSV || ' - ' || HoTen AS l FROM SinhVien ORDER BY MaSV"
+OPT_PHONG = ("SELECT MaPhong AS v, 'Phòng ' || SoPhong || ' - ' || LoaiPhong || ' (tối đa ' || SoNguoiToiDa || ' người)' AS l "
              "FROM Phong ORDER BY SoPhong")
-OPT_DV = "SELECT MaDV AS v, CONCAT(TenDV, ' - ', FORMAT(DonGia, 0), 'đ') AS l FROM DichVu ORDER BY MaDV"
-OPT_XE = ("SELECT x.MaXeThang AS v, CONCAT(x.MaXeThang, ' - ', x.BienSoXe, ' (', sv.HoTen, ')') AS l "
+OPT_DV = "SELECT MaDV AS v, TenDV || ' - ' || DonGia || 'đ' AS l FROM DichVu ORDER BY MaDV"
+OPT_XE = ("SELECT x.MaXeThang AS v, x.MaXeThang || ' - ' || x.BienSoXe || ' (' || sv.HoTen || ')' AS l "
           "FROM XeThang x JOIN SinhVien sv ON sv.MaSV = x.MaSV ORDER BY x.MaXeThang")
 OPT_TRANGTHAI = [dict(v="1", l="Đang hiệu lực"), dict(v="0", l="Đã hủy")]
 
@@ -208,14 +353,12 @@ def to_int(v, label):
         raise ValueError(f"{label} phải là số nguyên.")
 
 
-# --- Kiểm tra nghiệp vụ (bổ sung cho TRIGGER trong file SQL, vì trigger chỉ chạy khi INSERT) ---
-
 def v_sinhvien(vals, old, cur):
     mp = vals.get("MaPhong")
     if mp and (old is None or old.get("MaPhong") != mp):
-        cur.execute("SELECT SoNguoiToiDa FROM Phong WHERE MaPhong=%s", (mp,))
+        exec_sql(cur, "SELECT SoNguoiToiDa FROM Phong WHERE MaPhong=%s", (mp,))
         p = cur.fetchone()
-        cur.execute("SELECT COUNT(*) AS n FROM SinhVien WHERE MaPhong=%s", (mp,))
+        exec_sql(cur, "SELECT COUNT(*) AS n FROM SinhVien WHERE MaPhong=%s", (mp,))
         n = cur.fetchone()["n"]
         if p and n >= p["SoNguoiToiDa"]:
             raise ValueError("Lỗi: Phòng đã đạt số lượng người ở tối đa!")
@@ -225,7 +368,7 @@ def v_xe(vals, old, cur):
     vals["TrangThai"] = to_int(vals["TrangThai"], "Trạng thái")
     changed = old is None or not old["TrangThai"] or old["MaSV"] != vals["MaSV"]
     if vals["TrangThai"] == 1 and changed:
-        cur.execute("SELECT COUNT(*) AS n FROM XeThang WHERE MaSV=%s AND TrangThai=TRUE", (vals["MaSV"],))
+        exec_sql(cur, "SELECT COUNT(*) AS n FROM XeThang WHERE MaSV=%s AND TrangThai=1", (vals["MaSV"],))
         if cur.fetchone()["n"] >= 2:
             raise ValueError("Lỗi: Mỗi sinh viên chỉ được đăng ký tối đa 2 xe vé tháng!")
 
@@ -234,12 +377,12 @@ def v_sudung(vals, old, cur):
     sl = to_int(vals["SoLuong"], "Số lượng")
     if sl <= 0:
         raise ValueError("Số lượng phải lớn hơn 0.")
-    cur.execute("SELECT DonGia FROM DichVu WHERE MaDV=%s", (vals["MaDV"],))
+    exec_sql(cur, "SELECT DonGia FROM DichVu WHERE MaDV=%s", (vals["MaDV"],))
     dv = cur.fetchone()
     if not dv:
         raise ValueError("Dịch vụ không tồn tại.")
     vals["SoLuong"] = sl
-    vals["ThanhTien"] = dv["DonGia"] * sl  # thành tiền = đơn giá × số lượng
+    vals["ThanhTien"] = dv["DonGia"] * sl
 
 
 def v_luot(vals, old, cur):
@@ -247,18 +390,17 @@ def v_luot(vals, old, cur):
     if ra and ra < vao:
         raise ValueError("Thời gian lấy xe phải sau thời gian gửi xe.")
     vals["NgayGiaoDich"] = vao[:10]
-    if old is None:  # TRIGGER trg_TinhPhi_LuotGuiXe sẽ tự tính lại khi INSERT
+    if old is None:
         vals["SoLieuLuotTrongNgay"] = 1
         vals["PhuPhiPhatSinh"] = 0
 
 
 def recompute_luot(cur, xe, ngay):
-    """Đánh số lại các lượt trong ngày của 1 xe: từ lượt 3 trở đi phụ phí 3.000đ."""
-    cur.execute("SELECT MaLuot FROM LuotGuiXe WHERE MaXeThang=%s AND NgayGiaoDich=%s "
-                "ORDER BY ThoiGianVao, MaLuot", (xe, ngay))
+    exec_sql(cur, "SELECT MaLuot FROM LuotGuiXe WHERE MaXeThang=%s AND NgayGiaoDich=%s "
+                  "ORDER BY ThoiGianVao, MaLuot", (xe, ngay))
     for i, r in enumerate(cur.fetchall(), 1):
-        cur.execute("UPDATE LuotGuiXe SET SoLieuLuotTrongNgay=%s, PhuPhiPhatSinh=%s WHERE MaLuot=%s",
-                    (i, 3000 if i > 2 else 0, r["MaLuot"]))
+        exec_sql(cur, "UPDATE LuotGuiXe SET SoLieuLuotTrongNgay=%s, PhuPhiPhatSinh=%s WHERE MaLuot=%s",
+                      (i, 3000 if i > 2 else 0, r["MaLuot"]))
 
 
 def after_save_luot(cur, old, vals):
@@ -291,7 +433,7 @@ ENT = {
         sql=("SELECT p.*, COUNT(sv.MaSV) AS DangO, p.SoNguoiToiDa - COUNT(sv.MaSV) AS ConTrong "
              "FROM Phong p LEFT JOIN SinhVien sv ON sv.MaPhong = p.MaPhong GROUP BY p.MaPhong ORDER BY p.SoPhong"),
         columns=[C("MaPhong", "Mã phòng"), C("SoPhong", "Số phòng"), C("LoaiPhong", "Loại phòng"),
-                 C("DonGia", "Đơn giá/tháng", "money"), C("SoNguoiToiDa", "Tối đa"), C("DangO", "Đang ở"),
+                 C("DonGia", "Đơn giá/tháng", "money"), C("SoNguoiToiDa", "Tối đa"), C("DangO", "Dang ở"),
                  C("ConTrong", "Còn trống")],
         fields=[F("MaPhong", "Mã phòng", pk=True), F("SoPhong", "Số phòng"), F("LoaiPhong", "Loại phòng"),
                 F("DonGia", "Đơn giá / tháng (VNĐ)", "number"), F("SoNguoiToiDa", "Số người tối đa", "number")],
@@ -318,7 +460,7 @@ ENT = {
     ),
     "su-dung-dv": dict(
         table="SuDungDichVu", pk="MaSDDV", auto=True, title="Sử dụng dịch vụ",
-        desc="Nhật ký sinh viên dùng dịch vụ. Thành tiền = đơn giá × số lượng (tự tính).",
+        desc="Nhật ký sinh viên dùng dịch vụ. Thành tiền = đơn giá × số lượng.",
         sql=("SELECT s.*, sv.HoTen, d.TenDV FROM SuDungDichVu s JOIN SinhVien sv ON sv.MaSV = s.MaSV "
              "JOIN DichVu d ON d.MaDV = s.MaDV {where} ORDER BY s.ThoiGianSuDung DESC, s.MaSDDV DESC"),
         search=["sv.HoTen", "s.MaSV", "d.TenDV"],
@@ -348,7 +490,7 @@ ENT = {
     ),
     "luot-gui-xe": dict(
         table="LuotGuiXe", pk="MaLuot", auto=True, title="Lượt gửi/lấy xe vé tháng",
-        desc="Mỗi xe được 2 lượt miễn phí/ngày; từ lượt thứ 3 phụ phí 3.000đ/lượt (hệ thống tự tính).",
+        desc="Mỗi xe được 2 lượt miễn phí/ngày; từ lượt thứ 3 phụ phí 3.000đ/lượt.",
         sql=("SELECT l.*, x.BienSoXe, sv.HoTen FROM LuotGuiXe l JOIN XeThang x ON x.MaXeThang = l.MaXeThang "
              "JOIN SinhVien sv ON sv.MaSV = x.MaSV {where} ORDER BY l.ThoiGianVao DESC, l.MaLuot DESC"),
         search=["x.BienSoXe", "sv.HoTen", "l.MaXeThang"],
@@ -391,10 +533,11 @@ def collect(cfg, form, editing):
 
 def do_save(cfg, form, pk=None):
     db = get_db()
-    with db.cursor() as cur:
+    with db:
+        cur = db.cursor()
         old = None
         if pk is not None:
-            cur.execute(f"SELECT * FROM {cfg['table']} WHERE {cfg['pk']}=%s", (pk,))
+            exec_sql(cur, f"SELECT * FROM {cfg['table']} WHERE {cfg['pk']}=%s", (pk,))
             old = cur.fetchone()
             if old is None:
                 abort(404)
@@ -403,16 +546,13 @@ def do_save(cfg, form, pk=None):
             cfg["validate"](vals, old, cur)
         cols = list(vals)
         if pk is None:
-            cur.execute(
-                f"INSERT INTO {cfg['table']} ({', '.join(cols)}) VALUES ({', '.join(['%s'] * len(cols))})",
-                list(vals.values()))
+            placeholders = ", ".join(["?"] * len(cols))
+            exec_sql(cur, f"INSERT INTO {cfg['table']} ({', '.join(cols)}) VALUES ({placeholders})", list(vals.values()))
         else:
-            cur.execute(
-                f"UPDATE {cfg['table']} SET {', '.join(c + '=%s' for c in cols)} WHERE {cfg['pk']}=%s",
-                list(vals.values()) + [pk])
+            set_clause = ", ".join(c + "=?" for c in cols)
+            exec_sql(cur, f"UPDATE {cfg['table']} SET {set_clause} WHERE {cfg['pk']}=%s", list(vals.values()) + [pk])
         if cfg.get("after_save"):
             cfg["after_save"](cur, old, vals)
-    db.commit()
 
 
 def list_view(key):
@@ -441,10 +581,8 @@ def form_view(key, pk=None):
             flash("Đã lưu thành công.", "success")
             return redirect(f"/{key}")
         except ValueError as e:
-            get_db().rollback()
             flash(str(e), "danger")
-        except pymysql.MySQLError as e:
-            get_db().rollback()
+        except sqlite3.Error as e:
             flash(db_message(e), "danger")
         values = request.form.to_dict()
     else:
@@ -466,18 +604,17 @@ def delete_view(key, pk):
     cfg = ENT[key]
     db = get_db()
     try:
-        with db.cursor() as cur:
-            cur.execute(f"SELECT * FROM {cfg['table']} WHERE {cfg['pk']}=%s", (pk,))
+        with db:
+            cur = db.cursor()
+            exec_sql(cur, f"SELECT * FROM {cfg['table']} WHERE {cfg['pk']}=%s", (pk,))
             old = cur.fetchone()
             if old is None:
                 abort(404)
-            cur.execute(f"DELETE FROM {cfg['table']} WHERE {cfg['pk']}=%s", (pk,))
+            exec_sql(cur, f"DELETE FROM {cfg['table']} WHERE {cfg['pk']}=%s", (pk,))
             if cfg.get("after_delete"):
                 cfg["after_delete"](cur, old)
-        db.commit()
         flash("Đã xóa.", "success")
-    except pymysql.MySQLError as e:
-        db.rollback()
+    except sqlite3.Error as e:
         flash(db_message(e), "danger")
     return redirect(f"/{key}")
 
@@ -490,13 +627,12 @@ for _key in ENT:
 
 
 # ----------------------------------------------------------------------------
-# Báo cáo 1: Hóa đơn hàng tháng (tiền phòng + dịch vụ + vé xe tháng + phụ phí gửi xe)
+# Báo cáo 1: Hóa đơn hàng tháng
 # ----------------------------------------------------------------------------
-
 BILL_SQL = """
 SELECT sv.MaSV, sv.HoTen, sv.Lop, sv.QueQuan, sv.NgayBatDauO,
        COALESCE(p.SoPhong, 'Chưa xếp') AS SoPhong,
-       CASE WHEN p.MaPhong IS NOT NULL AND (sv.NgayBatDauO IS NULL OR sv.NgayBatDauO <= %(last)s)
+       CASE WHEN p.MaPhong IS NOT NULL AND (sv.NgayBatDauO IS NULL OR sv.NgayBatDauO <= :last)
             THEN p.DonGia ELSE 0 END AS TienPhong,
        COALESCE(dv.Tong, 0) AS TienDichVu,
        COALESCE(xe.Tong, 0) AS TienVeXe,
@@ -504,13 +640,13 @@ SELECT sv.MaSV, sv.HoTen, sv.Lop, sv.QueQuan, sv.NgayBatDauO,
 FROM SinhVien sv
 LEFT JOIN Phong p ON p.MaPhong = sv.MaPhong
 LEFT JOIN (SELECT MaSV, SUM(ThanhTien) AS Tong FROM SuDungDichVu
-           WHERE ThoiGianSuDung >= %(first)s AND ThoiGianSuDung < DATE_ADD(%(last)s, INTERVAL 1 DAY)
+           WHERE ThoiGianSuDung >= :first AND ThoiGianSuDung < date(:last, '+1 day')
            GROUP BY MaSV) dv ON dv.MaSV = sv.MaSV
 LEFT JOIN (SELECT MaSV, SUM(GiaVeThang) AS Tong FROM XeThang
-           WHERE TrangThai = TRUE AND NgayDangKy <= %(last)s GROUP BY MaSV) xe ON xe.MaSV = sv.MaSV
+           WHERE TrangThai = 1 AND NgayDangKy <= :last GROUP BY MaSV) xe ON xe.MaSV = sv.MaSV
 LEFT JOIN (SELECT x.MaSV, SUM(l.PhuPhiPhatSinh) AS Tong FROM LuotGuiXe l
            JOIN XeThang x ON x.MaXeThang = l.MaXeThang
-           WHERE l.NgayGiaoDich BETWEEN %(first)s AND %(last)s GROUP BY x.MaSV) pp ON pp.MaSV = sv.MaSV
+           WHERE l.NgayGiaoDich BETWEEN :first AND :last GROUP BY x.MaSV) pp ON pp.MaSV = sv.MaSV
 {where}
 ORDER BY sv.MaSV
 """
@@ -518,12 +654,12 @@ ORDER BY sv.MaSV
 
 def bill_rows(thang, nam, masv=None, q=None):
     first, last = month_range(thang, nam)
-    params = dict(first=first, last=last)
+    params = dict(first=first.isoformat(), last=last.isoformat())
     where = ""
     if masv:
-        where, params["masv"] = "WHERE sv.MaSV = %(masv)s", masv
+        where, params["masv"] = "WHERE sv.MaSV = :masv", masv
     elif q:
-        where = "WHERE (sv.MaSV LIKE %(q)s OR sv.HoTen LIKE %(q)s OR sv.Lop LIKE %(q)s)"
+        where = "WHERE (sv.MaSV LIKE :q OR sv.HoTen LIKE :q OR sv.Lop LIKE :q)"
         params["q"] = f"%{q}%"
     rows = query(BILL_SQL.replace("{where}", where), params)
     for r in rows:
@@ -555,25 +691,23 @@ def hoadon(masv):
         abort(404)
     first, last = month_range(thang, nam)
     dv = query("SELECT s.ThoiGianSuDung, d.TenDV, d.DonGia, s.SoLuong, s.ThanhTien FROM SuDungDichVu s "
-               "JOIN DichVu d ON d.MaDV = s.MaDV WHERE s.MaSV = %s AND s.ThoiGianSuDung >= %s "
-               "AND s.ThoiGianSuDung < DATE_ADD(%s, INTERVAL 1 DAY) ORDER BY s.ThoiGianSuDung",
-               (masv, first, last))
-    xe = query("SELECT MaXeThang, BienSoXe, LoaiXe, GiaVeThang FROM XeThang WHERE MaSV = %s AND TrangThai = TRUE "
-               "AND NgayDangKy <= %s ORDER BY MaXeThang", (masv, last))
+               "JOIN DichVu d ON d.MaDV = s.MaDV WHERE s.MaSV = ? AND s.ThoiGianSuDung >= ? "
+               "AND s.ThoiGianSuDung < date(?, '+1 day') ORDER BY s.ThoiGianSuDung",
+               (masv, first.isoformat(), last.isoformat()))
+    xe = query("SELECT MaXeThang, BienSoXe, LoaiXe, GiaVeThang FROM XeThang WHERE MaSV = ? AND TrangThai = 1 "
+               "AND NgayDangKy <= ? ORDER BY MaXeThang", (masv, last.isoformat()))
     pp = query("SELECT l.NgayGiaoDich, x.BienSoXe, COUNT(*) AS SoLuot, SUM(l.PhuPhiPhatSinh) AS PhuPhi "
                "FROM LuotGuiXe l JOIN XeThang x ON x.MaXeThang = l.MaXeThang "
-               "WHERE x.MaSV = %s AND l.NgayGiaoDich BETWEEN %s AND %s "
+               "WHERE x.MaSV = ? AND l.NgayGiaoDich BETWEEN ? AND ? "
                "GROUP BY l.NgayGiaoDich, x.BienSoXe HAVING SUM(l.PhuPhiPhatSinh) > 0 ORDER BY l.NgayGiaoDich",
-               (masv, first, last))
-    phong = query("SELECT p.* FROM Phong p JOIN SinhVien sv ON sv.MaPhong = p.MaPhong WHERE sv.MaSV = %s", (masv,), one=True)
+               (masv, first.isoformat(), last.isoformat()))
+    phong = query("SELECT p.* FROM Phong p JOIN SinhVien sv ON sv.MaPhong = p.MaPhong WHERE sv.MaSV = ?", (masv,), one=True)
     return render_template("hoadon.html", b=rows[0], dv=dv, xe=xe, pp=pp, phong=phong, thang=thang, nam=nam)
 
 
 # ----------------------------------------------------------------------------
-# Báo cáo 2: Dịch vụ của sinh viên trong khoảng [từ ngày – đến ngày]
+# Báo cáo 2: Dịch vụ của sinh viên
 # ----------------------------------------------------------------------------
-
-
 @app.route("/bao-cao/dich-vu-sv")
 def rp_dichvu():
     t = today()
@@ -582,10 +716,10 @@ def rp_dichvu():
     sql = ("SELECT sv.MaSV, sv.HoTen, sv.Lop, sv.QueQuan, d.MaDV, d.TenDV, d.DonGia, "
            "SUM(s.SoLuong) AS TongSoLuong, SUM(s.ThanhTien) AS TongTien "
            "FROM SuDungDichVu s JOIN SinhVien sv ON sv.MaSV = s.MaSV JOIN DichVu d ON d.MaDV = s.MaDV "
-           "WHERE s.ThoiGianSuDung >= %s AND s.ThoiGianSuDung < DATE_ADD(%s, INTERVAL 1 DAY) ")
-    args = [tu, den]
+           "WHERE s.ThoiGianSuDung >= ? AND s.ThoiGianSuDung < date(?, '+1 day') ")
+    args = [tu.isoformat(), den.isoformat()]
     if masv:
-        sql += "AND sv.MaSV = %s "
+        sql += "AND sv.MaSV = ? "
         args.append(masv)
     sql += ("GROUP BY sv.MaSV, sv.HoTen, sv.Lop, sv.QueQuan, d.MaDV, d.TenDV, d.DonGia "
             "ORDER BY sv.MaSV, d.MaDV")
@@ -596,15 +730,12 @@ def rp_dichvu():
                             [[r["MaSV"], r["HoTen"], r["Lop"], r["QueQuan"], r["TenDV"], r["DonGia"],
                               r["TongSoLuong"], r["TongTien"]] for r in rows])
     total = sum(r["TongTien"] for r in rows)
-    return render_template("bc_dichvu.html", rows=rows, tu=tu, den=den, masv=masv, total=total,
-                           svs=query(OPT_SV))
+    return render_template("bc_dichvu.html", rows=rows, tu=tu, den=den, masv=masv, total=total, svs=query(OPT_SV))
 
 
 # ----------------------------------------------------------------------------
-# Báo cáo 3: Khách đến thăm sinh viên theo tuần / tháng
+# Báo cáo 3: Khách đến thăm sinh viên
 # ----------------------------------------------------------------------------
-
-
 @app.route("/bao-cao/khach")
 def rp_khach():
     kieu = request.args.get("kieu", "thang")
@@ -612,18 +743,18 @@ def rp_khach():
         kieu = "thang"
     ngay = arg_date("ngay", today())
     if kieu == "tuan":
-        first = ngay - dt.timedelta(days=ngay.weekday())  # thứ Hai
+        first = ngay - dt.timedelta(days=ngay.weekday())
         last = first + dt.timedelta(days=6)
     else:
         first, last = month_range(ngay.month, ngay.year)
     rows = query(
         "SELECT sv.MaSV, sv.HoTen AS TenSV, sv.Lop, p.SoPhong, k.SoCMT, k.HoTen AS TenKhach, k.NgaySinh, "
         "COUNT(*) AS SoLan, "
-        "GROUP_CONCAT(DATE_FORMAT(k.NgayDenChoi, '%%d/%%m') ORDER BY k.NgayDenChoi SEPARATOR ', ') AS CacNgay "
+        "group_concat(substr(k.NgayDenChoi, 9, 2) || '/' || substr(k.NgayDenChoi, 6, 2), ', ') AS CacNgay "
         "FROM KhachTham k JOIN SinhVien sv ON sv.MaSV = k.MaSV LEFT JOIN Phong p ON p.MaPhong = sv.MaPhong "
-        "WHERE k.NgayDenChoi BETWEEN %s AND %s "
+        "WHERE k.NgayDenChoi BETWEEN ? AND ? "
         "GROUP BY sv.MaSV, sv.HoTen, sv.Lop, p.SoPhong, k.SoCMT, k.HoTen, k.NgaySinh "
-        "ORDER BY sv.MaSV, k.HoTen", (first, last))
+        "ORDER BY sv.MaSV, k.HoTen", (first.isoformat(), last.isoformat()))
     if request.args.get("csv"):
         return csv_response(f"khach-tham-{first}-{last}.csv",
                             ["Mã SV", "Sinh viên", "Lớp", "Phòng", "CMT khách", "Tên khách", "Ngày sinh khách", "Số lần đến", "Các ngày đến"],
@@ -636,15 +767,13 @@ def rp_khach():
 # ----------------------------------------------------------------------------
 # Báo cáo 4: Doanh thu từng dịch vụ theo tháng
 # ----------------------------------------------------------------------------
-
-
 @app.route("/bao-cao/doanh-thu")
 def rp_doanhthu():
     nam = arg_int("nam", today().year, 2000, 2100)
     rows = query(
-        "SELECT d.MaDV, d.TenDV, MONTH(s.ThoiGianSuDung) AS Thang, SUM(s.ThanhTien) AS DoanhThu "
-        "FROM DichVu d LEFT JOIN SuDungDichVu s ON s.MaDV = d.MaDV AND YEAR(s.ThoiGianSuDung) = %s "
-        "GROUP BY d.MaDV, d.TenDV, MONTH(s.ThoiGianSuDung) ORDER BY d.MaDV", (nam,))
+        "SELECT d.MaDV, d.TenDV, CAST(strftime('%m', s.ThoiGianSuDung) AS INTEGER) AS Thang, SUM(s.ThanhTien) AS DoanhThu "
+        "FROM DichVu d LEFT JOIN SuDungDichVu s ON s.MaDV = d.MaDV AND CAST(strftime('%Y', s.ThoiGianSuDung) AS INTEGER) = ? "
+        "GROUP BY d.MaDV, d.TenDV, CAST(strftime('%m', s.ThoiGianSuDung) AS INTEGER) ORDER BY d.MaDV", (nam,))
     dvs = {}
     for r in rows:
         d = dvs.setdefault(r["MaDV"], dict(MaDV=r["MaDV"], TenDV=r["TenDV"], thang=[Decimal(0)] * 12))
@@ -666,10 +795,8 @@ def rp_doanhthu():
 
 
 # ----------------------------------------------------------------------------
-# Bảng điều khiển
+# Bảng điều khiển (Dashboard)
 # ----------------------------------------------------------------------------
-
-
 @app.route("/")
 def index():
     t = today()
@@ -679,21 +806,21 @@ def index():
         "(SELECT COUNT(*) FROM Phong) AS phong, "
         "(SELECT COALESCE(SUM(SoNguoiToiDa), 0) FROM Phong) AS suc_chua, "
         "(SELECT COUNT(*) FROM SinhVien WHERE MaPhong IS NOT NULL) AS dang_o, "
-        "(SELECT COUNT(*) FROM KhachTham WHERE NgayDenChoi BETWEEN %s AND %s) AS khach, "
-        "(SELECT COUNT(*) FROM XeThang WHERE TrangThai = TRUE) AS xe", (first, last), one=True)
+        "(SELECT COUNT(*) FROM KhachTham WHERE NgayDenChoi BETWEEN ? AND ?) AS khach, "
+        "(SELECT COUNT(*) FROM XeThang WHERE TrangThai = 1) AS xe", (first.isoformat(), last.isoformat()), one=True)
     bills = bill_rows(t.month, t.year)
     tong_thu = sum(b["TongCong"] for b in bills)
     rooms = query("SELECT p.SoPhong, p.LoaiPhong, p.SoNguoiToiDa, COUNT(sv.MaSV) AS DangO FROM Phong p "
                   "LEFT JOIN SinhVien sv ON sv.MaPhong = p.MaPhong "
                   "GROUP BY p.MaPhong, p.SoPhong, p.LoaiPhong, p.SoNguoiToiDa ORDER BY p.SoPhong")
     dvs = query("SELECT d.TenDV, COALESCE(SUM(s.ThanhTien), 0) AS DoanhThu, COALESCE(SUM(s.SoLuong), 0) AS SoLuot "
-                "FROM DichVu d LEFT JOIN SuDungDichVu s ON s.MaDV = d.MaDV AND s.ThoiGianSuDung >= %s "
-                "AND s.ThoiGianSuDung < DATE_ADD(%s, INTERVAL 1 DAY) GROUP BY d.MaDV, d.TenDV ORDER BY DoanhThu DESC",
-                (first, last))
+                "FROM DichVu d LEFT JOIN SuDungDichVu s ON s.MaDV = d.MaDV AND s.ThoiGianSuDung >= ? "
+                "AND s.ThoiGianSuDung < date(?, '+1 day') GROUP BY d.MaDV, d.TenDV ORDER BY DoanhThu DESC",
+                (first.isoformat(), last.isoformat()))
     return render_template("index.html", st=st, tong_thu=tong_thu, rooms=rooms, dvs=dvs, thang=t.month, nam=t.year)
 
 
-@app.errorhandler(pymysql.MySQLError)
+@app.errorhandler(sqlite3.Error)
 def handle_db_error(e):
     return render_template("error.html", msg=db_message(e)), 500
 
@@ -703,5 +830,27 @@ def not_found(_e):
     return render_template("error.html", msg="Không tìm thấy trang hoặc bản ghi yêu cầu."), 404
 
 
+# ----------------------------------------------------------------------------
+# Luồng khởi chạy Flask ngầm & Khởi tạo PyWebView (Desktop Application)
+# ----------------------------------------------------------------------------
+def run_flask():
+    app.run(host="127.0.0.1", port=5000, debug=False, use_reloader=False)
+
+
 if __name__ == "__main__":
-    app.run(debug=True, host=os.environ.get("HOST", "127.0.0.1"), port=int(os.environ.get("PORT", "5000")))
+    init_db_if_not_exists()
+
+    # Chạy Flask Server ở luồng ngầm (Background Thread)
+    t = threading.Thread(target=run_flask)
+    t.daemon = True
+    t.start()
+
+    # Mở cửa sổ ứng dụng Desktop thông qua pywebview
+    webview.create_window(
+        title="Hệ Thống Quản Lý Ký Túc Xá Sinh Viên",
+        url="http://127.0.0.1:5000",
+        width=1280,
+        height=800,
+        min_size=(1024, 600)
+    )
+    webview.start()
