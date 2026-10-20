@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""Ứng dụng Desktop Quản lý Ký túc xá sinh viên (Flask + SQLite + PyWebView).
-
-Đóng gói PyInstaller:
-    pyinstaller --noconsole --onefile --add-data "templates;templates" --add-data "static;static" app.py
-"""
 import csv
 import datetime as dt
 import io
@@ -18,39 +12,31 @@ from flask import (Flask, Response, abort, flash, g, redirect, render_template,
                    request)
 from markupsafe import Markup, escape
 
-# ----------------------------------------------------------------------------
-# Cấu hình đường dẫn cho PyInstaller & Database (Giải pháp B: AppData)
-# ----------------------------------------------------------------------------
 if getattr(sys, 'frozen', False):
-    # Nếu là file .exe đóng gói bằng PyInstaller
+
     BASE_DIR = os.path.dirname(sys.executable)
     template_folder = os.path.join(sys._MEIPASS, 'templates')
     static_folder = os.path.join(sys._MEIPASS, 'static')
     app = Flask(__name__, template_folder=template_folder, static_folder=static_folder)
 else:
-    # Nếu chạy script .py bình thường
+
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
     app = Flask(__name__)
 
-# Lưu trữ database tại thư mục AppData của người dùng (Solution B)
-# Giúp dữ liệu luôn bền vững, tránh lỗi phân quyền UAC hoặc thư mục chỉ đọc.
 APPDATA_DIR = os.path.join(os.environ.get('APPDATA', BASE_DIR), 'KTXManager')
 os.makedirs(APPDATA_DIR, exist_ok=True)
 DB_PATH = os.path.join(APPDATA_DIR, "ktx.db")
 
 app.secret_key = os.environ.get("SECRET_KEY", "ktx-dev-secret-key")
 
-
-# --- BƯỚC 2: HÀM TỰ ĐỘNG TẠO/SỬA DATABASE HOÀN CHỈNH ---
 def init_db_if_not_exists():
-    # Tự động tạo thư mục nếu chưa tồn tại
+
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
-    
+
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
     cur.execute("PRAGMA foreign_keys = ON;")
-    
-    # Kiểm tra xem bảng SinhVien đã tồn tại chưa
+
     cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='SinhVien';")
     if not cur.fetchone():
         cur.executescript("""
@@ -160,12 +146,8 @@ def init_db_if_not_exists():
         conn.commit()
     conn.close()
 
-# TỰ ĐỘNG GỌI HÀM NÀY NGAY KHI APP ĐÓNG GÓI HOẶC PHÁT HÀNH CHẠY
 init_db_if_not_exists()
 
-# ----------------------------------------------------------------------------
-# Kết nối & tiện ích Database
-# ----------------------------------------------------------------------------
 def get_db():
     if "db" not in g:
         conn = sqlite3.connect(DB_PATH)
@@ -174,13 +156,11 @@ def get_db():
         g.db = conn
     return g.db
 
-
 @app.teardown_appcontext
 def close_db(_exc):
     db = g.pop("db", None)
     if db is not None:
         db.close()
-
 
 def exec_sql(cur, sql, args=None):
     if args is not None:
@@ -194,7 +174,6 @@ def exec_sql(cur, sql, args=None):
     else:
         cur.execute(sql)
 
-
 def query(sql, args=None, one=False):
     with get_db() as conn:
         cur = conn.cursor()
@@ -203,7 +182,6 @@ def query(sql, args=None, one=False):
             r = cur.fetchone()
             return dict(r) if r else None
         return [dict(r) for r in cur.fetchall()]
-
 
 def db_message(e):
     msg = str(e)
@@ -215,16 +193,13 @@ def db_message(e):
         return "Giá trị không hợp lệ (vi phạm ràng buộc số phải >= 0 / > 0)."
     return msg
 
-
 def today():
     return dt.date.today()
-
 
 def month_range(thang, nam):
     first = dt.date(nam, thang, 1)
     nxt = dt.date(nam + (thang == 12), thang % 12 + 1, 1)
     return first, nxt - dt.timedelta(days=1)
-
 
 def arg_int(name, default, lo, hi):
     try:
@@ -233,13 +208,11 @@ def arg_int(name, default, lo, hi):
     except (TypeError, ValueError):
         return default
 
-
 def arg_date(name, default):
     try:
         return dt.date.fromisoformat(request.args.get(name, ""))
     except ValueError:
         return default
-
 
 def to_input(v):
     if v is None:
@@ -251,7 +224,6 @@ def to_input(v):
     if isinstance(v, Decimal):
         return f"{v:f}"
     return str(v)
-
 
 def csv_response(filename, headers, rows):
     buf = io.StringIO()
@@ -270,16 +242,11 @@ def csv_response(filename, headers, rows):
         headers={"Content-Disposition": f"attachment; filename={filename}"},
     )
 
-
-# ----------------------------------------------------------------------------
-# Bộ lọc Jinja
-# ----------------------------------------------------------------------------
 @app.template_filter("vnd")
 def vnd(v):
     if v is None:
         return "0 đ"
     return f"{int(round(v)):,}".replace(",", ".") + " đ"
-
 
 @app.template_filter("fmt")
 def fmt(v, kind="text"):
@@ -295,11 +262,9 @@ def fmt(v, kind="text"):
         return v.strftime("%d/%m/%Y")
     return escape(v)
 
-
 @app.template_filter("dmy")
 def dmy(v):
     return v.strftime("%d/%m/%Y") if v else ""
-
 
 NAV = [
     ("Tổng quan", [("/", "Bảng điều khiển")]),
@@ -320,22 +285,15 @@ NAV = [
     ]),
 ]
 
-
 @app.context_processor
 def inject_nav():
     return dict(NAV=NAV, now_year=today().year)
 
-
-# ----------------------------------------------------------------------------
-# CRUD tổng quát cho các bảng
-# ----------------------------------------------------------------------------
 def F(name, label, type="text", required=True, **kw):
     return dict(name=name, label=label, type=type, required=required, **kw)
 
-
 def C(key, label, kind="text"):
     return dict(key=key, label=label, kind=kind)
-
 
 OPT_SV = "SELECT MaSV AS v, MaSV || ' - ' || HoTen AS l FROM SinhVien ORDER BY MaSV"
 OPT_PHONG = ("SELECT MaPhong AS v, 'Phòng ' || SoPhong || ' - ' || LoaiPhong || ' (tối đa ' || SoNguoiToiDa || ' người)' AS l "
@@ -345,13 +303,11 @@ OPT_XE = ("SELECT x.MaXeThang AS v, x.MaXeThang || ' - ' || x.BienSoXe || ' (' |
           "FROM XeThang x JOIN SinhVien sv ON sv.MaSV = x.MaSV ORDER BY x.MaXeThang")
 OPT_TRANGTHAI = [dict(v="1", l="Đang hiệu lực"), dict(v="0", l="Đã hủy")]
 
-
 def to_int(v, label):
     try:
         return int(v)
     except (TypeError, ValueError):
         raise ValueError(f"{label} phải là số nguyên.")
-
 
 def v_sinhvien(vals, old, cur):
     mp = vals.get("MaPhong")
@@ -363,7 +319,6 @@ def v_sinhvien(vals, old, cur):
         if p and n >= p["SoNguoiToiDa"]:
             raise ValueError("Lỗi: Phòng đã đạt số lượng người ở tối đa!")
 
-
 def v_xe(vals, old, cur):
     vals["TrangThai"] = to_int(vals["TrangThai"], "Trạng thái")
     changed = old is None or not old["TrangThai"] or old["MaSV"] != vals["MaSV"]
@@ -371,7 +326,6 @@ def v_xe(vals, old, cur):
         exec_sql(cur, "SELECT COUNT(*) AS n FROM XeThang WHERE MaSV=%s AND TrangThai=1", (vals["MaSV"],))
         if cur.fetchone()["n"] >= 2:
             raise ValueError("Lỗi: Mỗi sinh viên chỉ được đăng ký tối đa 2 xe vé tháng!")
-
 
 def v_sudung(vals, old, cur):
     sl = to_int(vals["SoLuong"], "Số lượng")
@@ -384,7 +338,6 @@ def v_sudung(vals, old, cur):
     vals["SoLuong"] = sl
     vals["ThanhTien"] = dv["DonGia"] * sl
 
-
 def v_luot(vals, old, cur):
     vao, ra = vals["ThoiGianVao"], vals.get("ThoiGianRa")
     if ra and ra < vao:
@@ -394,7 +347,6 @@ def v_luot(vals, old, cur):
         vals["SoLieuLuotTrongNgay"] = 1
         vals["PhuPhiPhatSinh"] = 0
 
-
 def recompute_luot(cur, xe, ngay):
     exec_sql(cur, "SELECT MaLuot FROM LuotGuiXe WHERE MaXeThang=%s AND NgayGiaoDich=%s "
                   "ORDER BY ThoiGianVao, MaLuot", (xe, ngay))
@@ -402,16 +354,13 @@ def recompute_luot(cur, xe, ngay):
         exec_sql(cur, "UPDATE LuotGuiXe SET SoLieuLuotTrongNgay=%s, PhuPhiPhatSinh=%s WHERE MaLuot=%s",
                       (i, 3000 if i > 2 else 0, r["MaLuot"]))
 
-
 def after_save_luot(cur, old, vals):
     recompute_luot(cur, vals["MaXeThang"], vals["NgayGiaoDich"])
     if old and (str(old["MaXeThang"]) != str(vals["MaXeThang"]) or str(old["NgayGiaoDich"]) != str(vals["NgayGiaoDich"])):
         recompute_luot(cur, old["MaXeThang"], old["NgayGiaoDich"])
 
-
 def after_delete_luot(cur, old):
     recompute_luot(cur, old["MaXeThang"], old["NgayGiaoDich"])
-
 
 ENT = {
     "sinh-vien": dict(
@@ -441,7 +390,6 @@ ENT = {
     ),
     "khach": dict(
         table="KhachTham", pk="MaKhach", auto=True, title="Khách đến thăm",
-        desc="Mỗi lần khách đến chơi được ghi 1 dòng (CMT, tên, ngày sinh, sinh viên được thăm, ngày đến).",
         sql=("SELECT k.*, sv.HoTen AS TenSV FROM KhachTham k JOIN SinhVien sv ON sv.MaSV = k.MaSV "
              "{where} ORDER BY k.NgayDenChoi DESC, k.MaKhach DESC"),
         search=["k.HoTen", "k.SoCMT", "sv.HoTen", "sv.MaSV"],
@@ -460,7 +408,6 @@ ENT = {
     ),
     "su-dung-dv": dict(
         table="SuDungDichVu", pk="MaSDDV", auto=True, title="Sử dụng dịch vụ",
-        desc="Nhật ký sinh viên dùng dịch vụ. Thành tiền = đơn giá × số lượng.",
         sql=("SELECT s.*, sv.HoTen, d.TenDV FROM SuDungDichVu s JOIN SinhVien sv ON sv.MaSV = s.MaSV "
              "JOIN DichVu d ON d.MaDV = s.MaDV {where} ORDER BY s.ThoiGianSuDung DESC, s.MaSDDV DESC"),
         search=["sv.HoTen", "s.MaSV", "d.TenDV"],
@@ -474,7 +421,6 @@ ENT = {
     ),
     "xe-thang": dict(
         table="XeThang", pk="MaXeThang", title="Xe vé tháng",
-        desc="Vé gửi xe tháng (100.000đ/tháng). Mỗi sinh viên tối đa 2 xe đang hiệu lực.",
         sql=("SELECT x.*, sv.HoTen FROM XeThang x JOIN SinhVien sv ON sv.MaSV = x.MaSV "
              "{where} ORDER BY x.MaXeThang"),
         search=["x.BienSoXe", "sv.HoTen", "x.MaSV", "x.MaXeThang"],
@@ -490,7 +436,6 @@ ENT = {
     ),
     "luot-gui-xe": dict(
         table="LuotGuiXe", pk="MaLuot", auto=True, title="Lượt gửi/lấy xe vé tháng",
-        desc="Mỗi xe được 2 lượt miễn phí/ngày; từ lượt thứ 3 phụ phí 3.000đ/lượt.",
         sql=("SELECT l.*, x.BienSoXe, sv.HoTen FROM LuotGuiXe l JOIN XeThang x ON x.MaXeThang = l.MaXeThang "
              "JOIN SinhVien sv ON sv.MaSV = x.MaSV {where} ORDER BY l.ThoiGianVao DESC, l.MaLuot DESC"),
         search=["x.BienSoXe", "sv.HoTen", "l.MaXeThang"],
@@ -505,7 +450,6 @@ ENT = {
         validate=v_luot, after_save=after_save_luot, after_delete=after_delete_luot,
     ),
 }
-
 
 def collect(cfg, form, editing):
     vals = {}
@@ -530,7 +474,6 @@ def collect(cfg, form, editing):
         vals[f["name"]] = v
     return vals
 
-
 def do_save(cfg, form, pk=None):
     db = get_db()
     with db:
@@ -554,7 +497,6 @@ def do_save(cfg, form, pk=None):
         if cfg.get("after_save"):
             cfg["after_save"](cur, old, vals)
 
-
 def list_view(key):
     cfg = ENT[key]
     q = request.args.get("q", "").strip()
@@ -564,7 +506,6 @@ def list_view(key):
         args = [f"%{q}%"] * len(cfg["search"])
     rows = query(cfg["sql"].replace("{where}", where), args)
     return render_template("list.html", key=key, cfg=cfg, rows=rows, q=q)
-
 
 def form_view(key, pk=None):
     cfg = ENT[key]
@@ -599,7 +540,6 @@ def form_view(key, pk=None):
             options[f["name"]] = query(o) if isinstance(o, str) else o
     return render_template("form.html", key=key, cfg=cfg, values=values, options=options, editing=editing, pk=pk)
 
-
 def delete_view(key, pk):
     cfg = ENT[key]
     db = get_db()
@@ -618,17 +558,12 @@ def delete_view(key, pk):
         flash(db_message(e), "danger")
     return redirect(f"/{key}")
 
-
 for _key in ENT:
     app.add_url_rule(f"/{_key}", f"{_key}_list", list_view, defaults={"key": _key})
     app.add_url_rule(f"/{_key}/new", f"{_key}_new", form_view, defaults={"key": _key}, methods=["GET", "POST"])
     app.add_url_rule(f"/{_key}/<pk>/edit", f"{_key}_edit", form_view, defaults={"key": _key}, methods=["GET", "POST"])
     app.add_url_rule(f"/{_key}/<pk>/delete", f"{_key}_delete", delete_view, defaults={"key": _key}, methods=["POST"])
 
-
-# ----------------------------------------------------------------------------
-# Báo cáo 1: Hóa đơn hàng tháng
-# ----------------------------------------------------------------------------
 BILL_SQL = """
 SELECT sv.MaSV, sv.HoTen, sv.Lop, sv.QueQuan, sv.NgayBatDauO,
        COALESCE(p.SoPhong, 'Chưa xếp') AS SoPhong,
@@ -651,7 +586,6 @@ LEFT JOIN (SELECT x.MaSV, SUM(l.PhuPhiPhatSinh) AS Tong FROM LuotGuiXe l
 ORDER BY sv.MaSV
 """
 
-
 def bill_rows(thang, nam, masv=None, q=None):
     first, last = month_range(thang, nam)
     params = dict(first=first.isoformat(), last=last.isoformat())
@@ -666,7 +600,6 @@ def bill_rows(thang, nam, masv=None, q=None):
         r["TongCong"] = r["TienPhong"] + r["TienDichVu"] + r["TienVeXe"] + r["PhuPhiXe"]
     return rows
 
-
 @app.route("/bao-cao/hoa-don")
 def rp_hoadon():
     t = today()
@@ -680,7 +613,6 @@ def rp_hoadon():
                               r["TienVeXe"], r["PhuPhiXe"], r["TongCong"]] for r in rows])
     tot = {k: sum(r[k] for r in rows) for k in ("TienPhong", "TienDichVu", "TienVeXe", "PhuPhiXe", "TongCong")}
     return render_template("bc_hoadon.html", rows=rows, tot=tot, thang=thang, nam=nam, q=q)
-
 
 @app.route("/hoa-don/<masv>")
 def hoadon(masv):
@@ -704,10 +636,6 @@ def hoadon(masv):
     phong = query("SELECT p.* FROM Phong p JOIN SinhVien sv ON sv.MaPhong = p.MaPhong WHERE sv.MaSV = ?", (masv,), one=True)
     return render_template("hoadon.html", b=rows[0], dv=dv, xe=xe, pp=pp, phong=phong, thang=thang, nam=nam)
 
-
-# ----------------------------------------------------------------------------
-# Báo cáo 2: Dịch vụ của sinh viên
-# ----------------------------------------------------------------------------
 @app.route("/bao-cao/dich-vu-sv")
 def rp_dichvu():
     t = today()
@@ -732,10 +660,6 @@ def rp_dichvu():
     total = sum(r["TongTien"] for r in rows)
     return render_template("bc_dichvu.html", rows=rows, tu=tu, den=den, masv=masv, total=total, svs=query(OPT_SV))
 
-
-# ----------------------------------------------------------------------------
-# Báo cáo 3: Khách đến thăm sinh viên
-# ----------------------------------------------------------------------------
 @app.route("/bao-cao/khach")
 def rp_khach():
     kieu = request.args.get("kieu", "thang")
@@ -763,10 +687,6 @@ def rp_khach():
     return render_template("bc_khach.html", rows=rows, kieu=kieu, ngay=ngay, first=first, last=last,
                            tong_lan=sum(r["SoLan"] for r in rows))
 
-
-# ----------------------------------------------------------------------------
-# Báo cáo 4: Doanh thu từng dịch vụ theo tháng
-# ----------------------------------------------------------------------------
 @app.route("/bao-cao/doanh-thu")
 def rp_doanhthu():
     nam = arg_int("nam", today().year, 2000, 2100)
@@ -793,10 +713,6 @@ def rp_doanhthu():
                  sets=[dict(label=d["TenDV"], data=[float(x) for x in d["thang"]]) for d in table])
     return render_template("bc_doanhthu.html", table=table, col_tot=col_tot, grand=grand, nam=nam, chart=chart)
 
-
-# ----------------------------------------------------------------------------
-# Bảng điều khiển (Dashboard)
-# ----------------------------------------------------------------------------
 @app.route("/")
 def index():
     t = today()
@@ -819,33 +735,24 @@ def index():
                 (first.isoformat(), last.isoformat()))
     return render_template("index.html", st=st, tong_thu=tong_thu, rooms=rooms, dvs=dvs, thang=t.month, nam=t.year)
 
-
 @app.errorhandler(sqlite3.Error)
 def handle_db_error(e):
     return render_template("error.html", msg=db_message(e)), 500
-
 
 @app.errorhandler(404)
 def not_found(_e):
     return render_template("error.html", msg="Không tìm thấy trang hoặc bản ghi yêu cầu."), 404
 
-
-# ----------------------------------------------------------------------------
-# Luồng khởi chạy Flask ngầm & Khởi tạo PyWebView (Desktop Application)
-# ----------------------------------------------------------------------------
 def run_flask():
     app.run(host="127.0.0.1", port=5000, debug=False, use_reloader=False)
-
 
 if __name__ == "__main__":
     init_db_if_not_exists()
 
-    # Chạy Flask Server ở luồng ngầm (Background Thread)
     t = threading.Thread(target=run_flask)
     t.daemon = True
     t.start()
 
-    # Mở cửa sổ ứng dụng Desktop thông qua pywebview
     webview.create_window(
         title="Hệ Thống Quản Lý Ký Túc Xá Sinh Viên",
         url="http://127.0.0.1:5000",
