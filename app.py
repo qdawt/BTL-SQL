@@ -311,7 +311,7 @@ def to_int(v, label):
 
 def v_sinhvien(vals, old, cur):
     mp = vals.get("MaPhong")
-    if mp and (old is None or old.get("MaPhong") != mp):
+    if mp and (old is None or old["MaPhong"] != mp):
         exec_sql(cur, "SELECT SoNguoiToiDa FROM Phong WHERE MaPhong=%s", (mp,))
         p = cur.fetchone()
         exec_sql(cur, "SELECT COUNT(*) AS n FROM SinhVien WHERE MaPhong=%s", (mp,))
