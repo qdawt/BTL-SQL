@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}{{ cfg.title }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>{{ cfg.title }}</h1>
+    <p class="text-muted mb-0">{{ cfg.desc }}</p>
+  </div>
+  <a class="btn btn-primary" href="/{{ key }}/new">+ Thêm mới</a>
+</div>
+
+{% if cfg.search %}
+<form class="searchbar" method="get">
+  <input class="form-control" name="q" value="{{ q }}" placeholder="Tìm kiếm…">
+  <button class="btn btn-outline-primary">Tìm</button>
+  {% if q %}<a class="btn btn-link" href="/{{ key }}">Xóa lọc</a>{% endif %}
+</form>
+{% endif %}
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          {% for c in cfg.columns %}<th class="{{ 'text-end' if c.kind == 'money' }}">{{ c.label }}</th>{% endfor %}
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          {% for c in cfg.columns %}
+            <td class="{{ 'text-end' if c.kind == 'money' }}">{{ r[c.key]|fmt(c.kind) }}</td>
+          {% endfor %}
+          <td class="text-end text-nowrap">
+            <a class="btn btn-sm btn-outline-secondary" href="/{{ key }}/{{ r[cfg.pk] }}/edit">Sửa</a>
+            <form class="d-inline" method="post" action="/{{ key }}/{{ r[cfg.pk] }}/delete"
+                  onsubmit="return confirm({{ (cfg.delete_warn or 'Xóa bản ghi này?')|tojson }});">
+              <button class="btn btn-sm btn-outline-danger">Xóa</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="{{ cfg.columns|length + 1 }}" class="text-center text-muted py-4">Chưa có dữ liệu.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+<p class="text-muted small mt-2">{{ rows|length }} bản ghi</p>
+{% endblock %}

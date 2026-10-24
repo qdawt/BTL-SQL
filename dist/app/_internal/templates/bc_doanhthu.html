@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Doanh thu dịch vụ{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Doanh thu dịch vụ theo tháng</h1>
+    <p class="text-muted mb-0">Danh mục dịch vụ cùng doanh thu của mỗi dịch vụ trong từng tháng của năm.</p>
+  </div>
+</div>
+
+<form class="filter" method="get">
+  <div><label class="form-label">Năm</label><input class="form-control" type="number" name="nam" value="{{ nam }}" style="width:110px"></div>
+  <button class="btn btn-primary">Xem</button>
+  <button class="btn btn-outline-secondary" name="csv" value="1">Xuất CSV</button>
+</form>
+
+<div class="card mb-3">
+  <div class="card-header">Biểu đồ doanh thu năm {{ nam }}</div>
+  <div class="card-body"><canvas id="chart" height="90"></canvas></div>
+</div>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-sm align-middle mb-0 text-nowrap">
+      <thead><tr><th>Mã</th><th>Dịch vụ</th>
+        {% for m in range(1, 13) %}<th class="text-end">T{{ m }}</th>{% endfor %}
+        <th class="text-end">Cả năm</th></tr></thead>
+      <tbody>
+      {% for d in table %}
+        <tr><td>{{ d.MaDV }}</td><td>{{ d.TenDV }}</td>
+          {% for x in d.thang %}<td class="text-end {{ 'text-muted' if x == 0 }}">{{ x|vnd if x else '–' }}</td>{% endfor %}
+          <td class="text-end fw-bold">{{ d.tong|vnd }}</td></tr>
+      {% else %}<tr><td colspan="15" class="text-center text-muted py-4">Chưa có dịch vụ.</td></tr>{% endfor %}
+      </tbody>
+      {% if table %}
+      <tfoot><tr class="table-light fw-bold"><td colspan="2">TỔNG</td>
+        {% for x in col_tot %}<td class="text-end">{{ x|vnd if x else '–' }}</td>{% endfor %}
+        <td class="text-end">{{ grand|vnd }}</td></tr></tfoot>
+      {% endif %}
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+  const c = {{ chart|tojson }};
+  const colors = ['#0f766e', '#2563eb', '#d97706', '#9333ea', '#dc2626', '#0891b2', '#65a30d'];
+  new Chart(document.getElementById('chart'), {
+    type: 'bar',
+    data: { labels: c.labels, datasets: c.sets.map((s, i) => ({ label: s.label, data: s.data, backgroundColor: colors[i % colors.length] })) },
+    options: { responsive: true, scales: { x: { stacked: true }, y: { stacked: true, ticks: { callback: v => v.toLocaleString('vi-VN') } } } }
+  });
+</script>
+{% endblock %}

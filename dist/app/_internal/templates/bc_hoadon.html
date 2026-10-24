@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Hóa đơn hàng tháng{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Hóa đơn hàng tháng</h1>
+    <p class="text-muted mb-0">Tiền phòng (tính chẵn tháng) + dịch vụ + vé xe tháng + phụ phí gửi xe, theo từng sinh viên.</p>
+  </div>
+</div>
+
+<form class="filter" method="get">
+  <div><label class="form-label">Tháng</label>
+    <select class="form-select" name="thang">
+      {% for m in range(1, 13) %}<option value="{{ m }}" {% if m == thang %}selected{% endif %}>Tháng {{ m }}</option>{% endfor %}
+    </select></div>
+  <div><label class="form-label">Năm</label>
+    <input class="form-control" type="number" name="nam" value="{{ nam }}" style="width:100px"></div>
+  <div class="grow"><label class="form-label">Tìm sinh viên</label>
+    <input class="form-control" name="q" value="{{ q }}" placeholder="Mã SV / họ tên / lớp"></div>
+  <button class="btn btn-primary">Xem</button>
+  <button class="btn btn-outline-secondary" name="csv" value="1">Xuất CSV</button>
+</form>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead><tr>
+        <th>Mã SV</th><th>Họ tên</th><th>Lớp</th><th>Phòng</th>
+        <th class="text-end">Tiền phòng</th><th class="text-end">Dịch vụ</th>
+        <th class="text-end">Vé xe tháng</th><th class="text-end">Phụ phí xe</th>
+        <th class="text-end">Tổng cộng</th><th></th>
+      </tr></thead>
+      <tbody>
+      {% for r in rows %}
+        <tr>
+          <td>{{ r.MaSV }}</td><td>{{ r.HoTen }}</td><td>{{ r.Lop }}</td><td>{{ r.SoPhong }}</td>
+          <td class="text-end">{{ r.TienPhong|vnd }}</td>
+          <td class="text-end">{{ r.TienDichVu|vnd }}</td>
+          <td class="text-end">{{ r.TienVeXe|vnd }}</td>
+          <td class="text-end">{{ r.PhuPhiXe|vnd }}</td>
+          <td class="text-end fw-bold">{{ r.TongCong|vnd }}</td>
+          <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="/hoa-don/{{ r.MaSV }}?thang={{ thang }}&nam={{ nam }}">Chi tiết / In</a></td>
+        </tr>
+      {% else %}
+        <tr><td colspan="10" class="text-center text-muted py-4">Không có dữ liệu.</td></tr>
+      {% endfor %}
+      </tbody>
+      {% if rows %}
+      <tfoot><tr class="table-light fw-bold">
+        <td colspan="4">Tổng cộng ({{ rows|length }} sinh viên)</td>
+        <td class="text-end">{{ tot.TienPhong|vnd }}</td><td class="text-end">{{ tot.TienDichVu|vnd }}</td>
+        <td class="text-end">{{ tot.TienVeXe|vnd }}</td><td class="text-end">{{ tot.PhuPhiXe|vnd }}</td>
+        <td class="text-end">{{ tot.TongCong|vnd }}</td><td></td>
+      </tr></tfoot>
+      {% endif %}
+    </table>
+  </div>
+</div>
+{% endblock %}

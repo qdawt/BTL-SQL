@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Sửa' if editing else 'Thêm' }} · {{ cfg.title }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>{{ 'Sửa' if editing else 'Thêm mới' }} · {{ cfg.title }}</h1>
+    <p class="text-muted mb-0">{{ cfg.desc }}</p>
+  </div>
+</div>
+
+<div class="card form-card">
+  <div class="card-body">
+    <form method="post" novalidate>
+      <div class="row g-3">
+        {% for f in cfg.fields %}
+          {% set val = values.get(f.name, '') %}
+          <div class="col-md-6">
+            <label class="form-label" for="f_{{ f.name }}">{{ f.label }}{% if f.required %} <span class="text-danger">*</span>{% endif %}</label>
+            {% if f.type == 'select' %}
+              <select class="form-select" id="f_{{ f.name }}" name="{{ f.name }}">
+                {% if not f.no_blank %}<option value="">{{ '— Chọn —' if f.required else '— Không chọn —' }}</option>{% endif %}
+                {% for o in options[f.name] %}
+                  <option value="{{ o.v }}" {% if val|string == o.v|string %}selected{% endif %}>{{ o.l }}</option>
+                {% endfor %}
+              </select>
+            {% else %}
+              <input class="form-control" id="f_{{ f.name }}" name="{{ f.name }}" value="{{ val }}"
+                     type="{{ {'datetime': 'datetime-local', 'number': 'number'}.get(f.type, f.type) }}"
+                     {% if f.type == 'number' %}step="any"{% endif %}
+                     {% if f.pk and editing %}readonly{% endif %}>
+              {% if f.pk and editing %}<div class="form-text">Mã không thể thay đổi.</div>{% endif %}
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+      <div class="mt-4 d-flex gap-2">
+        <button class="btn btn-primary">Lưu</button>
+        <a class="btn btn-outline-secondary" href="/{{ key }}">Hủy</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
