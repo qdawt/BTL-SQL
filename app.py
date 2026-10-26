@@ -264,7 +264,14 @@ def fmt(v, kind="text"):
 
 @app.template_filter("dmy")
 def dmy(v):
-    return v.strftime("%d/%m/%Y") if v else ""
+    if not v:
+        return ""
+    if isinstance(v, str):
+        try:
+            v = dt.date.fromisoformat(v[:10])
+        except ValueError:
+            return v
+    return v.strftime("%d/%m/%Y") if hasattr(v, "strftime") else str(v)
 
 NAV = [
     ("Tổng quan", [("/", "Bảng điều khiển")]),
@@ -712,7 +719,60 @@ def rp_doanhthu():
     chart = dict(labels=[f"T{i}" for i in range(1, 13)],
                  sets=[dict(label=d["TenDV"], data=[float(x) for x in d["thang"]]) for d in table])
     return render_template("bc_doanhthu.html", table=table, col_tot=col_tot, grand=grand, nam=nam, chart=chart)
-
+@app.route("/sinh-vien/<masv>")
+def sinh_vien_detail(masv):
+    if masv == "new":
+        abort(404)
+    
+    # 1. Thông tin sinh viên & Phòng ở (Quan hệ N-1 / 1-1 với Phong)
+    sv = query(
+        "SELECT sv.*, p.SoPhong, p.LoaiPhong, p.DonGia AS GiaPhong, p.SoNguoiToiDa "
+        "FROM SinhVien sv LEFT JOIN Phong p ON p.MaPhong = sv.MaPhong "
+        "WHERE sv.MaSV = ?", (masv,), one=True
+    )
+    if not sv:
+        abort(404)
+        
+    # 2. Khách đã thăm (Quan hệ 1-N: SinhVien -> KhachTham)
+    khach = query(
+        "SELECT * FROM KhachTham WHERE MaSV = ? ORDER BY NgayDenChoi DESC", (masv,)
+    )
+    
+    # 3. Dịch vụ đã dùng (Quan hệ 1-N: SinhVien -> SuDungDichVu)
+    dichvu = query(
+        "SELECT s.*, d.TenDV, d.DonGia FROM SuDungDichVu s "
+        "JOIN DichVu d ON d.MaDV = s.MaDV "
+        "WHERE s.MaSV = ? ORDER BY s.ThoiGianSuDung DESC", (masv,)
+    )
+    
+    # 4. Xe vé tháng (Quan hệ 1-N: SinhVien -> XeThang) và Lượt gửi xe
+    xe = query("SELECT * FROM XeThang WHERE MaSV = ?", (masv,))
+    luot_gui = query(
+        "SELECT l.*, x.BienSoXe FROM LuotGuiXe l "
+        "JOIN XeThang x ON x.MaXeThang = l.MaXeThang "
+        "WHERE x.MaSV = ? ORDER BY l.ThoiGianVao DESC", (masv,)
+    )
+    
+    # 5. Hóa đơn các tháng trong năm hiện tại (Tái sử dụng hàm bill_rows có sẵn)
+    nam_hien_tai = today().year
+    hoadons = []
+    for m in range(1, 13):
+        b_rows = bill_rows(m, nam_hien_tai, masv=masv)
+        if b_rows:
+            b = b_rows[0]
+            # Chỉ lấy các tháng có phát sinh chi phí thực tế
+            if b["TienPhong"] > 0 or b["TienDichVu"] > 0 or b["TienVeXe"] > 0 or b["PhuPhiXe"] > 0:
+                hoadons.append({
+                    "thang": m,
+                    "nam": nam_hien_tai,
+                    "data": b
+                })
+                
+    return render_template(
+        "sinh_vien_detail.html", 
+        sv=sv, khach=khach, dichvu=dichvu, 
+        xe=xe, luot_gui=luot_gui, hoadons=hoadons, nam=nam_hien_tai
+    )
 @app.route("/")
 def index():
     t = today()
@@ -752,7 +812,7 @@ if __name__ == "__main__":
     t = threading.Thread(target=run_flask)
     t.daemon = True
     t.start()
-
+    webview.settings['ALLOW_DOWNLOADS'] = True
     webview.create_window(
         title="Hệ Thống Quản Lý Ký Túc Xá Sinh Viên",
         url="http://127.0.0.1:5000",
