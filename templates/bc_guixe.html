@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Thống kê gửi xe{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Thống kê lượt gửi/lấy xe & phụ phí</h1>
+    <p class="text-muted mb-0">Thống kê chi tiết số lượt ra/vào, các lượt phát sinh phụ phí (> 2 lượt/ngày) theo khoảng thời gian.</p>
+  </div>
+</div>
+
+<form class="filter" method="get" action="/bao-cao/gui-xe">
+  <div><label class="form-label">Từ ngày</label><input class="form-control" type="date" name="tu" value="{{ tu.isoformat() }}"></div>
+  <div><label class="form-label">Đến ngày</label><input class="form-control" type="date" name="den" value="{{ den.isoformat() }}"></div>
+  <div class="grow"><label class="form-label">Tìm kiếm xe / Sinh viên</label>
+    <input class="form-control" name="q" value="{{ q }}" placeholder="Biển số / mã vé / tên sinh viên...">
+  </div>
+  <button type="submit" class="btn btn-primary">Xem báo cáo</button>
+  <button type="submit" class="btn btn-outline-secondary" name="csv" value="1">Xuất CSV</button>
+</form>
+
+<div class="stats mb-3">
+  <div class="stat"><span>Số xe vé tháng</span><b>{{ tot.xe }}</b></div>
+  <div class="stat"><span>Tổng lượt ra/vào</span><b>{{ tot.luot }}</b></div>
+  <div class="stat"><span>Lượt tính phụ phí (>2 lượt/ngày)</span><b>{{ tot.luot_vuot }}</b></div>
+  <div class="stat accent"><span>Tổng phụ phí phát sinh</span><b>{{ tot.phu_phi|vnd }}</b></div>
+</div>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th>Mã vé</th>
+          <th>Biển số xe</th>
+          <th>Loại xe</th>
+          <th>Chủ xe (Sinh viên)</th>
+          <th>Lớp</th>
+          <th class="text-center">Tổng lượt ra/vào</th>
+          <th class="text-center">Lượt tính phụ phí</th>
+          <th class="text-end">Phụ phí phát sinh</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for r in rows %}
+        <tr>
+          <td><code>{{ r.MaXeThang }}</code></td>
+          <td><b>{{ r.BienSoXe }}</b></td>
+          <td>{{ r.LoaiXe }}</td>
+          <td><b>{{ r.TenSV }}</b> <span class="text-muted small">({{ r.MaSV }})</span></td>
+          <td>{{ r.Lop }}</td>
+          <td class="text-center"><span class="badge bg-primary fs-6">{{ r.TongLuot }}</span></td>
+          <td class="text-center">
+            {% if r.LuotVuotTroi > 0 %}
+              <span class="badge bg-warning text-dark fs-6">{{ r.LuotVuotTroi }} lượt</span>
+            {% else %}
+              <span class="text-muted">0</span>
+            {% endif %}
+          </td>
+          <td class="text-end fw-bold">{{ r.TongPhuPhi|vnd }}</td>
+        </tr>
+      {% else %}
+        <tr><td colspan="8" class="text-center text-muted py-4">Không tìm thấy dữ liệu lượt gửi xe trong khoảng thời gian này.</td></tr>
+      {% endfor %}
+      </tbody>
+      {% if rows %}
+      <tfoot>
+        <tr class="table-light fw-bold">
+          <td colspan="5">TỔNG CỘNG ({{ tot.xe }} xe)</td>
+          <td class="text-center">{{ tot.luot }}</td>
+          <td class="text-center">{{ tot.luot_vuot }}</td>
+          <td class="text-end text-success">{{ tot.phu_phi|vnd }}</td>
+        </tr>
+      </tfoot>
+      {% endif %}
+    </table>
+  </div>
+</div>
+{% endblock %}

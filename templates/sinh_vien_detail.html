@@ -12,17 +12,16 @@
   </div>
 </div>
 
-<!-- Thông tin cá nhân & Phòng ở -->
 <div class="card mb-4">
   <div class="card-header bg-white fw-bold">Thông tin chung & Phòng ở</div>
   <div class="card-body">
     <div class="row g-3">
       <div class="col-md-3"><b>Số CMT/CCCD:</b> {{ sv.SoCMT }}</div>
-      <div class="col-md-3"><b>Ngày sinh:</b> {{ sv.NgaySinh|fmt('date') }}</div>
+      <div class="col-md-3"><b>Ngày sinh:</b> {{ sv.NgaySinh|dmy }}</div>
       <div class="col-md-3"><b>Quê quán:</b> {{ sv.QueQuan }}</div>
-      <div class="col-md-3"><b>Ngày bắt đầu ở:</b> {{ sv.NgayBatDauO|fmt('date') or '—' }}</div>
+      <div class="col-md-3"><b>Ngày bắt đầu ở:</b> {{ sv.NgayBatDauO|dmy or '—' }}</div>
       <div class="col-md-12"><hr class="my-1"></div>
-      <div class="col-md-4">
+      <div class="col-md-12">
         <b>Phòng ở hiện tại:</b> 
         {% if sv.SoPhong %}
           Phòng {{ sv.SoPhong }} ({{ sv.LoaiPhong }}) - Đơn giá: {{ sv.GiaPhong|vnd }}/tháng
@@ -45,7 +44,7 @@
           <tbody>
           {% for k in khach %}
             <tr>
-              <td>{{ k.NgayDenChoi|fmt('date') }}</td>
+              <td>{{ k.NgayDenChoi|dmy }}</td>
               <td><b>{{ k.HoTen }}</b></td>
               <td>{{ k.SoCMT }}</td>
             </tr>
@@ -103,8 +102,9 @@
           </tbody>
         </table>
       </div>
-      <div class="card-footer bg-white small text-muted">
-        Tổng số lượt gửi xe ghi nhận: <b>{{ luot_gui|length }}</b> lượt.
+      <div class="card-footer bg-white d-flex justify-content-between align-items-center small text-muted">
+        <span>Tổng số lượt gửi xe ghi nhận: <b>{{ luot_gui|length }}</b> lượt.</span>
+        <a href="/bao-cao/gui-xe?q={{ sv.MaSV }}" class="btn btn-sm btn-link p-0 text-decoration-none">Chi tiết báo cáo gửi xe →</a>
       </div>
     </div>
   </div>

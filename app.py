@@ -289,6 +289,7 @@ NAV = [
         ("/bao-cao/dich-vu-sv", "2. Dịch vụ theo khoảng ngày"),
         ("/bao-cao/khach", "3. Khách thăm (tuần/tháng)"),
         ("/bao-cao/doanh-thu", "4. Doanh thu dịch vụ"),
+        ("/bao-cao/gui-xe", "5. Thống kê gửi xe"),
     ]),
 ]
 
@@ -693,7 +694,48 @@ def rp_khach():
                               r["SoLan"], r["CacNgay"]] for r in rows])
     return render_template("bc_khach.html", rows=rows, kieu=kieu, ngay=ngay, first=first, last=last,
                            tong_lan=sum(r["SoLan"] for r in rows))
+@app.route("/bao-cao/gui-xe")
+def rp_guixe():
+    t = today()
+    tu = arg_date("tu", t.replace(day=1))
+    den = arg_date("den", t)
+    q = request.args.get("q", "").strip()
 
+    sql = ("""
+        SELECT x.MaXeThang, x.BienSoXe, x.LoaiXe, x.GiaVeThang, sv.MaSV, sv.HoTen AS TenSV, sv.Lop,
+               COUNT(l.MaLuot) AS TongLuot,
+               SUM(CASE WHEN l.SoLieuLuotTrongNgay > 2 THEN 1 ELSE 0 END) AS LuotVuotTroi,
+               COALESCE(SUM(l.PhuPhiPhatSinh), 0) AS TongPhuPhi
+        FROM XeThang x
+        JOIN SinhVien sv ON sv.MaSV = x.MaSV
+        LEFT JOIN LuotGuiXe l ON l.MaXeThang = x.MaXeThang AND l.NgayGiaoDich BETWEEN ? AND ?
+        WHERE 1=1
+    """)
+    args = [tu.isoformat(), den.isoformat()]
+
+    if q:
+        sql += " AND (x.BienSoXe LIKE ? OR x.MaXeThang LIKE ? OR sv.HoTen LIKE ? OR sv.MaSV LIKE ?)"
+        args.extend([f"%{q}%"] * 4)
+
+    sql += " GROUP BY x.MaXeThang, x.BienSoXe, x.LoaiXe, x.GiaVeThang, sv.MaSV, sv.HoTen, sv.Lop ORDER BY TongLuot DESC"
+
+    rows = query(sql, args)
+
+    if request.args.get("csv"):
+        return csv_response(
+            f"thong-ke-gui-xe-{tu}-{den}.csv",
+            ["Mã xe", "Biển số", "Loại xe", "Chủ xe (Mã SV)", "Tên sinh viên", "Lớp", "Tổng lượt gửi", "Lượt phụ phí (>2 lượt/ngày)", "Phụ phí phát sinh"],
+            [[r["MaXeThang"], r["BienSoXe"], r["LoaiXe"], r["MaSV"], r["TenSV"], r["Lop"], r["TongLuot"], r["LuotVuotTroi"], r["TongPhuPhi"]] for r in rows]
+        )
+
+    tot = {
+        "xe": len(rows),
+        "luot": sum(r["TongLuot"] for r in rows),
+        "luot_vuot": sum(r["LuotVuotTroi"] for r in rows),
+        "phu_phi": sum(r["TongPhuPhi"] for r in rows)
+    }
+
+    return render_template("bc_guixe.html", rows=rows, tu=tu, den=den, q=q, tot=tot)
 @app.route("/bao-cao/doanh-thu")
 def rp_doanhthu():
     nam = arg_int("nam", today().year, 2000, 2100)
