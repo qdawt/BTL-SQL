@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% block title %}Hồ sơ sinh viên - {{ sv.HoTen }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <a class="btn btn-sm btn-outline-secondary mb-2" href="/sinh-vien">← Quay lại danh sách sinh viên</a>
+    <h1>Hồ sơ sinh viên: {{ sv.HoTen }}</h1>
+    <p class="text-muted mb-0">Mã SV: <b>{{ sv.MaSV }}</b> · Lớp: {{ sv.Lop }}</p>
+  </div>
+  <div>
+    <a class="btn btn-outline-primary" href="/sinh-vien/{{ sv.MaSV }}/edit">Chỉnh sửa thông tin</a>
+  </div>
+</div>
+
+<!-- Thông tin cá nhân & Phòng ở -->
+<div class="card mb-4">
+  <div class="card-header bg-white fw-bold">Thông tin chung & Phòng ở</div>
+  <div class="card-body">
+    <div class="row g-3">
+      <div class="col-md-3"><b>Số CMT/CCCD:</b> {{ sv.SoCMT }}</div>
+      <div class="col-md-3"><b>Ngày sinh:</b> {{ sv.NgaySinh|fmt('date') }}</div>
+      <div class="col-md-3"><b>Quê quán:</b> {{ sv.QueQuan }}</div>
+      <div class="col-md-3"><b>Ngày bắt đầu ở:</b> {{ sv.NgayBatDauO|fmt('date') or '—' }}</div>
+      <div class="col-md-12"><hr class="my-1"></div>
+      <div class="col-md-4">
+        <b>Phòng ở hiện tại:</b> 
+        {% if sv.SoPhong %}
+          Phòng {{ sv.SoPhong }} ({{ sv.LoaiPhong }}) - Đơn giá: {{ sv.GiaPhong|vnd }}/tháng
+        {% else %}
+          <span class="text-muted">Chưa xếp phòng</span>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- 1. Khách đã thăm -->
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header bg-white fw-bold">1. Lịch sử khách đến thăm ({{ khach|length }})</div>
+      <div class="table-responsive">
+        <table class="table table-sm align-middle mb-0">
+          <thead><tr><th>Ngày đến</th><th>Tên khách</th><th>CMT khách</th></tr></thead>
+          <tbody>
+          {% for k in khach %}
+            <tr>
+              <td>{{ k.NgayDenChoi|fmt('date') }}</td>
+              <td><b>{{ k.HoTen }}</b></td>
+              <td>{{ k.SoCMT }}</td>
+            </tr>
+          {% else %}
+            <tr><td colspan="3" class="text-center text-muted py-3">Không có lịch sử khách thăm.</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Dịch vụ đã dùng -->
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header bg-white fw-bold">2. Dịch vụ đã sử dụng ({{ dichvu|length }})</div>
+      <div class="table-responsive">
+        <table class="table table-sm align-middle mb-0">
+          <thead><tr><th>Thời gian</th><th>Dịch vụ</th><th class="text-end">SL</th><th class="text-end">Thành tiền</th></tr></thead>
+          <tbody>
+          {% for d in dichvu %}
+            <tr>
+              <td>{{ d.ThoiGianSuDung|fmt('datetime') }}</td>
+              <td>{{ d.TenDV }}</td>
+              <td class="text-end">{{ d.SoLuong }}</td>
+              <td class="text-end">{{ d.ThanhTien|vnd }}</td>
+            </tr>
+          {% else %}
+            <tr><td colspan="4" class="text-center text-muted py-3">Chưa sử dụng dịch vụ nào.</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Xe vé tháng & Lượt gửi xe -->
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header bg-white fw-bold">3. Xe vé tháng đăng ký ({{ xe|length }})</div>
+      <div class="table-responsive">
+        <table class="table table-sm align-middle mb-0">
+          <thead><tr><th>Mã vé</th><th>Biển số</th><th>Loại xe</th><th>Trạng thái</th></tr></thead>
+          <tbody>
+          {% for x in xe %}
+            <tr>
+              <td>{{ x.MaXeThang }}</td>
+              <td><b>{{ x.BienSoXe }}</b></td>
+              <td>{{ x.LoaiXe }}</td>
+              <td>{{ x.TrangThai|fmt('bool') }}</td>
+            </tr>
+          {% else %}
+            <tr><td colspan="4" class="text-center text-muted py-3">Không đăng ký xe vé tháng.</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="card-footer bg-white small text-muted">
+        Tổng số lượt gửi xe ghi nhận: <b>{{ luot_gui|length }}</b> lượt.
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Hóa đơn các tháng -->
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header bg-white fw-bold">4. Tổng hợp hóa đơn năm {{ nam }}</div>
+      <div class="table-responsive">
+        <table class="table table-sm align-middle mb-0">
+          <thead><tr><th>Tháng</th><th class="text-end">Tiền phòng</th><th class="text-end">Tổng cộng</th><th class="text-end">Thao tác</th></tr></thead>
+          <tbody>
+          {% for h in hoadons %}
+            <tr>
+              <td><b>Tháng {{ h.thang }}</b></td>
+              <td class="text-end">{{ h.data.TienPhong|vnd }}</td>
+              <td class="text-end fw-bold text-success">{{ h.data.TongCong|vnd }}</td>
+              <td class="text-end">
+                <a class="btn btn-sm btn-outline-primary" href="/hoa-don/{{ sv.MaSV }}?thang={{ h.thang }}&nam={{ h.nam }}">Xem hóa đơn</a>
+              </td>
+            </tr>
+          {% else %}
+            <tr><td colspan="4" class="text-center text-muted py-3">Chưa có phát sinh hóa đơn trong năm.</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
