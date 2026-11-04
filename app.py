@@ -109,39 +109,249 @@ def init_db_if_not_exists():
             FOREIGN KEY (MaXeThang) REFERENCES XeThang(MaXeThang) ON DELETE CASCADE
         );
 
-        -- Thêm dữ liệu mẫu ban đầu
-        INSERT OR IGNORE INTO Phong VALUES ('P101', '101', 'Phòng 4 người (Điều hòa)', 1200000.00, 4);
-        INSERT OR IGNORE INTO Phong VALUES ('P102', '102', 'Phòng 6 người (Quạt)', 800000.00, 6);
-        INSERT OR IGNORE INTO Phong VALUES ('P201', '201', 'Phòng 2 người (VIP)', 2000000.00, 2);
+        INSERT OR IGNORE INTO Phong VALUES ('P101', 'A101', 'Phòng 4 người (Điều hòa)', 1200000.00, 4);
+        INSERT OR IGNORE INTO Phong VALUES ('P102', 'A102', 'Phòng 4 người (Điều hòa)', 1200000.00, 4);
+        INSERT OR IGNORE INTO Phong VALUES ('P103', 'A103', 'Phòng 6 người (Quạt)', 800000.00, 6);
+        INSERT OR IGNORE INTO Phong VALUES ('P201', 'A201', 'Phòng 2 người (VIP - Điều hòa)', 2000000.00, 2);
+        INSERT OR IGNORE INTO Phong VALUES ('P202', 'A202', 'Phòng 2 người (VIP - Điều hòa)', 2000000.00, 2);
+
+        INSERT OR IGNORE INTO Phong VALUES ('PB101', 'B101', 'Phòng 8 người (Quạt)', 600000.00, 8);
+        INSERT OR IGNORE INTO Phong VALUES ('PB102', 'B102', 'Phòng 8 người (Quạt)', 600000.00, 8);
+        INSERT OR IGNORE INTO Phong VALUES ('PB201', 'B201', 'Phòng 4 người (Điều hòa)', 1300000.00, 4);
+        INSERT OR IGNORE INTO Phong VALUES ('PB202', 'B202', 'Phòng 4 người (Điều hòa)', 1300000.00, 4);
+        INSERT OR IGNORE INTO Phong VALUES ('PB203', 'B203', 'Phòng 6 người (Quạt)', 850000.00, 6);
+
+        INSERT OR IGNORE INTO Phong VALUES ('PC101', 'C101', 'Phòng 4 người (Điều hòa + Tủ lạnh)', 1500000.00, 4);
+        INSERT OR IGNORE INTO Phong VALUES ('PC102', 'C102', 'Phòng 4 người (Điều hòa + Tủ lạnh)', 1500000.00, 4);
+        INSERT OR IGNORE INTO Phong VALUES ('PC201', 'C201', 'Phòng 2 người (VIP - Điều hòa)', 2200000.00, 2);
+
 
         INSERT OR IGNORE INTO SinhVien VALUES ('SV001', '001202001111', 'Nguyễn Văn An', '2004-05-15', 'CNTT1-K17', 'Hà Nội', 'P101', '2024-09-01');
         INSERT OR IGNORE INTO SinhVien VALUES ('SV002', '001202002222', 'Trần Thị Bình', '2004-08-20', 'ATTT2-K17', 'Nam Định', 'P101', '2024-09-01');
-        INSERT OR IGNORE INTO SinhVien VALUES ('SV003', '001202003333', 'Lê Hoàng Cường', '2005-02-10', 'DVT1-K18', 'Hải Phòng', 'P102', '2025-09-01');
-        INSERT OR IGNORE INTO SinhVien VALUES ('SV004', '001202004444', 'Phạm Minh Đức', '2005-11-05', 'CNTT2-K18', 'Nghệ An', 'P201', '2025-09-01');
+        INSERT OR IGNORE INTO SinhVien VALUES ('SV003', '001202003333', 'Lê Hoàng Cường', '2005-02-10', 'DVT1-K18', 'Hải Phòng', 'P101', '2025-09-01');
+        INSERT OR IGNORE INTO SinhVien VALUES ('SV004', '001202004444', 'Phạm Minh Đức', '2005-11-05', 'CNTT2-K18', 'Nghệ An', 'P101', '2025-09-01');
+
+        INSERT OR IGNORE INTO SinhVien VALUES ('SV007', '001202007777', 'Hoàng Ngọc Mai', '2006-01-30', 'CNTT3-K19', 'Phú Thọ', 'P102', '2026-09-01');
+        INSERT OR IGNORE INTO SinhVien VALUES ('SV008', '001202008888', 'Nông Văn Thắng', '2006-07-18', 'ATTT1-K19', 'Lạng Sơn', 'P102', '2026-09-01');
+
+        INSERT OR IGNORE INTO SinhVien VALUES ('SV020', '001202020000', 'Mai Văn Tuấn', '2006-03-10', 'CNTT1-K19', 'Hòa Bình', 'P103', '2026-09-01');
+        INSERT OR IGNORE INTO SinhVien VALUES ('SV021', '001202021111', 'Lò Thị Mai', '2006-05-12', 'ATTT2-K19', 'Sơn La', 'P103', '2026-09-01');
+        INSERT OR IGNORE INTO SinhVien VALUES ('SV022', '001202022222', 'Bùi Văn Hùng', '2005-09-15', 'DVT1-K18', 'Lai Châu', 'P103', '2026-09-01');
+
+        INSERT OR IGNORE INTO SinhVien VALUES ('SV005', '001202005555', 'Đỗ Thùy Linh', '2003-03-25', 'QTKD1-K16', 'Thanh Hóa', 'P201', '2023-09-01');
+        INSERT OR IGNORE INTO SinhVien VALUES ('SV006', '001202006666', 'Vũ Quốc Anh', '2003-12-12', 'DDT3-K16', 'Quảng Ninh', 'P201', '2023-09-01');
+
+        INSERT OR IGNORE INTO SinhVien VALUES ('SV023', '001202023333', 'Cao Minh Triết', '2004-04-14', 'KTPM2-K17', 'Hải Phòng', 'P202', '2024-09-01');
+        INSERT OR IGNORE INTO SinhVien VALUES ('SV024', '001202024444', 'Hồ Ngọc Hà', '2004-11-25', 'QTKD1-K17', 'Đà Nẵng', 'P202', '2024-09-01');
+
+        INSERT OR IGNORE INTO SinhVien VALUES ('SV009', '001202009999', 'Bùi Thái Sơn', '2004-09-09', 'DVT2-K17', 'Hà Nam', 'PB101', '2024-09-01');
+        INSERT OR IGNORE INTO SinhVien VALUES ('SV025', '001202025555', 'Phan Văn Trọng', '2005-06-18', 'CNTT2-K18', 'Nghệ An', 'PB101', '2025-09-01');
+        INSERT OR IGNORE INTO SinhVien VALUES ('SV026', '001202026666', 'Đinh Thị Thu', '2005-08-20', 'ATTT1-K18', 'Thái Bình', 'PB101', '2025-09-01');
+        INSERT OR IGNORE INTO SinhVien VALUES ('SV027', '001202027777', 'Nguyễn Tiến Dũng', '2006-12-02', 'DDT1-K19', 'Nam Định', 'PB101', '2026-09-01');
+
+        INSERT OR IGNORE INTO SinhVien VALUES ('SV028', '001202028888', 'Trịnh Công Sơn', '2004-01-11', 'QTKD3-K17', 'Thanh Hóa', 'PB102', '2024-09-01');
+        INSERT OR IGNORE INTO SinhVien VALUES ('SV029', '001202029999', 'Lê Thảo Vy', '2005-07-07', 'KTPM1-K18', 'Quảng Ninh', 'PB102', '2025-09-01');
+
+        INSERT OR IGNORE INTO SinhVien VALUES ('SV030', '001202030000', 'Vương Hải Nam', '2004-10-10', 'CNTT1-K17', 'Hà Nội', 'PB201', '2024-09-01');
+        INSERT OR IGNORE INTO SinhVien VALUES ('SV031', '001202031111', 'Dương Quỳnh Nga', '2005-03-03', 'ATTT2-K18', 'Hải Dương', 'PB201', '2025-09-01');
+
+        INSERT OR IGNORE INTO SinhVien VALUES ('SV012', '001202012222', 'Phạm Hoàng Long', '2005-06-12', 'KTPM1-K18', 'Hải Dương', 'PB202', '2025-09-01');
+        INSERT OR IGNORE INTO SinhVien VALUES ('SV013', '001202013333', 'Vũ Thị Thanh', '2005-09-19', 'CNTT2-K18', 'Hưng Yên', 'PB202', '2025-09-01');
+        INSERT OR IGNORE INTO SinhVien VALUES ('SV014', '001202014444', 'Nguyễn Đức Minh', '2004-12-01', 'ATTT1-K17', 'Bắc Giang', 'PB202', '2024-09-01');
+        INSERT OR IGNORE INTO SinhVien VALUES ('SV015', '001202015555', 'Lý Hải Nam', '2006-03-14', 'DVT1-K19', 'Thái Bình', 'PB202', '2026-09-01');
+
+        INSERT OR IGNORE INTO SinhVien VALUES ('SV032', '001202032222', 'Tạ Văn Lộc', '2006-08-08', 'DDT2-K19', 'Bắc Ninh', 'PB203', '2026-09-01');
+        INSERT OR IGNORE INTO SinhVien VALUES ('SV033', '001202033333', 'Ngô Thanh Vân', '2006-11-19', 'QTKD2-K19', 'Vĩnh Phúc', 'PB203', '2026-09-01');
+
+        INSERT OR IGNORE INTO SinhVien VALUES ('SV010', '001202010000', 'Đặng Ngọc Ánh', '2005-04-04', 'QTKD2-K18', 'Vĩnh Phúc', 'PC101', '2025-09-01');
+        INSERT OR IGNORE INTO SinhVien VALUES ('SV034', '001202034444', 'Lương Thế Vinh', '2004-02-28', 'CNTT3-K17', 'Hà Nam', 'PC101', '2024-09-01');
+
+        INSERT OR IGNORE INTO SinhVien VALUES ('SV016', '001202016666', 'Bùi Thị Hoa', '2004-07-22', 'QTKD3-K17', 'Nam Định', 'PC102', '2024-09-01');
+        INSERT OR IGNORE INTO SinhVien VALUES ('SV018', '001202018888', 'Hoàng Thị Thảo', '2006-02-11', 'CNTT1-K19', 'Hà Nội', 'PC102', '2026-09-01');
+
+        INSERT OR IGNORE INTO SinhVien VALUES ('SV017', '001202017777', 'Trương Văn Tuấn', '2003-10-05', 'DDT1-K16', 'Ninh Bình', 'PC201', '2023-09-01');
+
+        INSERT OR IGNORE INTO SinhVien VALUES ('SV011', '001202011111', 'Ngô Kiến Huy', '2006-10-22', 'CNTT1-K19', 'Bắc Ninh', NULL, NULL);
+        INSERT OR IGNORE INTO SinhVien VALUES ('SV019', '001202019999', 'Đinh Văn Quý', '2005-08-28', 'ATTT2-K18', 'Thanh Hóa', NULL, NULL);
+
+
+        INSERT OR IGNORE INTO DichVu VALUES ('DV01', 'Giặt là (Lượt)', 15000.00);
+        INSERT OR IGNORE INTO DichVu VALUES ('DV02', 'Suất ăn KTX', 30000.00);
+        INSERT OR IGNORE INTO DichVu VALUES ('DV03', 'Cho thuê xe đạp (Giờ)', 20000.00);
+        INSERT OR IGNORE INTO DichVu VALUES ('DV04', 'Rửa xe máy', 25000.00);
+        INSERT OR IGNORE INTO DichVu VALUES ('DV05', 'Nước uống bình 20L', 22000.00);
+        INSERT OR IGNORE INTO DichVu VALUES ('DV06', 'Vé tập Gym / Tháng', 150000.00);
+        INSERT OR IGNORE INTO DichVu VALUES ('DV07', 'Dịch vụ In / Photocopy', 500.00);
+        INSERT OR IGNORE INTO DichVu VALUES ('DV08', 'Tiền điện sinh hoạt chung (KWh)', 3500.00);
+        INSERT OR IGNORE INTO DichVu VALUES ('DV09', 'Tiền nước sinh hoạt (Khối)', 10000.00);
+        INSERT OR IGNORE INTO DichVu VALUES ('DV10', 'Bảo dưỡng / Sửa chữa thiết bị', 50000.00);
+
 
         INSERT OR IGNORE INTO KhachTham (SoCMT, HoTen, NgaySinh, MaSV, NgayDenChoi) VALUES ('001199005555', 'Nguyễn Văn Nam', '1980-01-01', 'SV001', '2026-10-05');
         INSERT OR IGNORE INTO KhachTham (SoCMT, HoTen, NgaySinh, MaSV, NgayDenChoi) VALUES ('001199006666', 'Trần Văn Hùng', '1978-04-12', 'SV002', '2026-10-10');
+        INSERT OR IGNORE INTO KhachTham (SoCMT, HoTen, NgaySinh, MaSV, NgayDenChoi) VALUES ('036195007777', 'Đỗ Hoàng Anh', '1998-06-20', 'SV005', '2026-10-14');
+        INSERT OR IGNORE INTO KhachTham (SoCMT, HoTen, NgaySinh, MaSV, NgayDenChoi) VALUES ('025188008888', 'Lê Thị Mai', '1985-09-15', 'SV003', '2026-10-18');
+        INSERT OR IGNORE INTO KhachTham (SoCMT, HoTen, NgaySinh, MaSV, NgayDenChoi) VALUES ('034190001111', 'Phạm Văn Hưởng', '1975-03-10', 'SV012', '2026-11-02');
+        INSERT OR IGNORE INTO KhachTham (SoCMT, HoTen, NgaySinh, MaSV, NgayDenChoi) VALUES ('036192002222', 'Vũ Văn Thịnh', '1980-11-20', 'SV013', '2026-11-05');
+        INSERT OR IGNORE INTO KhachTham (SoCMT, HoTen, NgaySinh, MaSV, NgayDenChoi) VALUES ('001185003333', 'Nguyễn Thị Lan', '1982-05-04', 'SV016', '2026-11-12');
+        INSERT OR IGNORE INTO KhachTham (SoCMT, HoTen, NgaySinh, MaSV, NgayDenChoi) VALUES ('038198004444', 'Trương Công Định', '1970-12-12', 'SV017', '2026-11-15');
+        INSERT OR IGNORE INTO KhachTham (SoCMT, HoTen, NgaySinh, MaSV, NgayDenChoi) VALUES ('001199005555', 'Nguyễn Văn Nam', '1980-01-01', 'SV020', '2026-11-20');
 
-        INSERT OR IGNORE INTO DichVu VALUES ('DV01', 'Giặt là', 15000.00);
-        INSERT OR IGNORE INTO DichVu VALUES ('DV02', 'Ăn sáng / Cơm ca', 30000.00);
-        INSERT OR IGNORE INTO DichVu VALUES ('DV03', 'Cho thuê xe đạp', 20000.00);
-        INSERT OR IGNORE INTO DichVu VALUES ('DV04', 'Rửa xe', 25000.00);
 
-        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV001', 'DV01', '2026-10-05 08:30:00', 3, 45000.00);
-        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV001', 'DV02', '2026-10-10 12:00:00', 5, 150000.00);
-        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV002', 'DV01', '2026-10-06 09:15:00', 2, 30000.00);
-        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV002', 'DV03', '2026-10-12 14:00:00', 1, 20000.00);
-        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV003', 'DV02', '2026-10-15 18:30:00', 10, 300000.00);
-        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV004', 'DV04', '2026-10-08 10:00:00', 2, 50000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV001', 'DV01', '2026-10-01 08:00:00', 2, 30000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV002', 'DV02', '2026-10-01 11:30:00', 1, 30000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV003', 'DV05', '2026-10-02 09:00:00', 1, 22000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV004', 'DV06', '2026-10-02 17:00:00', 1, 150000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV005', 'DV07', '2026-10-03 10:15:00', 50, 25000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV006', 'DV04', '2026-10-03 14:20:00', 1, 25000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV007', 'DV01', '2026-10-04 08:30:00', 3, 45000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV008', 'DV03', '2026-10-05 15:00:00', 2, 40000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV009', 'DV02', '2026-10-06 12:00:00', 4, 120000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV010', 'DV05', '2026-10-07 10:00:00', 2, 44000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV012', 'DV08', '2026-10-08 09:00:00', 30, 105000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV013', 'DV09', '2026-10-08 11:00:00', 4, 40000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV014', 'DV01', '2026-10-09 16:30:00', 1, 15000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV015', 'DV02', '2026-10-10 18:00:00', 2, 60000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV016', 'DV04', '2026-10-11 08:45:00', 1, 25000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV017', 'DV10', '2026-10-12 13:30:00', 1, 50000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV018', 'DV07', '2026-10-13 15:15:00', 100, 50000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV020', 'DV01', '2026-10-14 09:20:00', 2, 30000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV021', 'DV03', '2026-10-15 16:00:00', 1, 20000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV022', 'DV05', '2026-10-16 11:10:00', 1, 22000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV023', 'DV06', '2026-10-17 07:30:00', 1, 150000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV024', 'DV02', '2026-10-18 12:15:00', 3, 90000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV025', 'DV08', '2026-10-19 10:00:00', 50, 175000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV026', 'DV09', '2026-10-20 14:00:00', 5, 50000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV027', 'DV01', '2026-10-21 08:10:00', 4, 60000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV028', 'DV04', '2026-10-22 16:45:00', 1, 25000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV029', 'DV02', '2026-10-23 18:30:00', 2, 60000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV030', 'DV05', '2026-10-24 09:50:00', 3, 66000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV031', 'DV07', '2026-10-25 11:25:00', 80, 40000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV032', 'DV10', '2026-10-26 15:40:00', 1, 50000.00);
 
-        INSERT OR IGNORE INTO XeThang VALUES ('XT01', 'SV001', '29-A1 123.45', 'Xe máy Wave', '2026-09-01', 100000.00, 1);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV001', 'DV08', '2026-11-01 09:00:00', 40, 140000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV001', 'DV09', '2026-11-01 09:30:00', 6, 60000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV002', 'DV01', '2026-11-01 14:00:00', 2, 30000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV003', 'DV02', '2026-11-02 12:00:00', 5, 150000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV004', 'DV05', '2026-11-02 16:15:00', 2, 44000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV005', 'DV06', '2026-11-03 08:00:00', 1, 150000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV006', 'DV04', '2026-11-03 10:30:00', 1, 25000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV007', 'DV07', '2026-11-04 15:00:00', 120, 60000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV008', 'DV03', '2026-11-04 17:20:00', 3, 60000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV009', 'DV01', '2026-11-05 08:45:00', 3, 45000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV010', 'DV02', '2026-11-05 11:45:00', 2, 60000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV012', 'DV10', '2026-11-06 14:10:00', 1, 50000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV013', 'DV05', '2026-11-06 16:40:00', 1, 22000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV014', 'DV08', '2026-11-07 09:15:00', 35, 122500.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV015', 'DV09', '2026-11-07 10:00:00', 3, 30000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV016', 'DV01', '2026-11-08 08:30:00', 2, 30000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV017', 'DV06', '2026-11-08 18:00:00', 1, 150000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV018', 'DV04', '2026-11-09 11:20:00', 1, 25000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV020', 'DV02', '2026-11-09 12:30:00', 4, 120000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV021', 'DV05', '2026-11-10 15:50:00', 2, 44000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV022', 'DV07', '2026-11-10 16:30:00', 60, 30000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV023', 'DV03', '2026-11-11 09:40:00', 2, 40000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV024', 'DV01', '2026-11-11 14:15:00', 1, 15000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV025', 'DV02', '2026-11-12 18:10:00', 3, 90000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV026', 'DV08', '2026-11-13 08:20:00', 42, 147000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV027', 'DV09', '2026-11-13 10:50:00', 5, 50000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV028', 'DV05', '2026-11-14 13:00:00', 1, 22000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV029', 'DV06', '2026-11-14 17:30:00', 1, 150000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV030', 'DV04', '2026-11-15 09:10:00', 2, 50000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV031', 'DV01', '2026-11-15 15:45:00', 3, 45000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV032', 'DV02', '2026-11-16 11:50:00', 2, 60000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV033', 'DV03', '2026-11-16 16:20:00', 1, 20000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV034', 'DV07', '2026-11-17 10:40:00', 150, 75000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV001', 'DV02', '2026-11-17 12:15:00', 6, 180000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV002', 'DV05', '2026-11-18 09:30:00', 2, 44000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV003', 'DV10', '2026-11-18 14:00:00', 1, 50000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV004', 'DV01', '2026-11-19 08:00:00', 2, 30000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV005', 'DV08', '2026-11-19 16:50:00', 48, 168000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV007', 'DV09', '2026-11-20 11:10:00', 4, 40000.00);
+        INSERT OR IGNORE INTO SuDungDichVu (MaSV, MaDV, ThoiGianSuDung, SoLuong, ThanhTien) VALUES ('SV009', 'DV06', '2026-11-20 17:00:00', 1, 150000.00);
+
+
+        INSERT OR IGNORE INTO XeThang VALUES ('XT01', 'SV001', '29-A1 123.45', 'Xe máy Wave Alpha', '2026-09-01', 100000.00, 1);
         INSERT OR IGNORE INTO XeThang VALUES ('XT02', 'SV001', '29-MD 888.88', 'Xe điện VinFast', '2026-09-15', 100000.00, 1);
         INSERT OR IGNORE INTO XeThang VALUES ('XT03', 'SV002', '18-B2 567.89', 'Xe máy Vision', '2026-09-01', 100000.00, 1);
+        INSERT OR IGNORE INTO XeThang VALUES ('XT04', 'SV004', '37-N1 999.99', 'Xe máy Exciter', '2026-09-10', 100000.00, 1);
+        INSERT OR IGNORE INTO XeThang VALUES ('XT05', 'SV005', '36-B8 432.10', 'Xe máy SH Mode', '2026-09-01', 100000.00, 1);
+        INSERT OR IGNORE INTO XeThang VALUES ('XT06', 'SV007', '19-C1 111.22', 'Xe điện Pega', '2026-10-01', 100000.00, 1);
+        INSERT OR IGNORE INTO XeThang VALUES ('XT07', 'SV012', '17-B1 345.67', 'Xe máy Sirius', '2025-09-01', 100000.00, 1);
+        INSERT OR IGNORE INTO XeThang VALUES ('XT08', 'SV013', '89-D1 888.22', 'Xe điện Espero', '2025-09-15', 100000.00, 1);
+        INSERT OR IGNORE INTO XeThang VALUES ('XT09', 'SV014', '98-C1 123.89', 'Xe máy Jupiter', '2024-09-01', 100000.00, 1);
+        INSERT OR IGNORE INTO XeThang VALUES ('XT10', 'SV016', '18-F1 456.78', 'Xe máy Lead', '2024-09-01', 100000.00, 1);
+        INSERT OR IGNORE INTO XeThang VALUES ('XT11', 'SV020', '28-H1 789.01', 'Xe máy Wave RSX', '2026-09-01', 100000.00, 1);
 
-        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT01', '2026-10-10 07:00:00', '2026-10-10 09:00:00', '2026-10-10', 1, 0.00);
-        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT01', '2026-10-10 10:00:00', '2026-10-10 12:00:00', '2026-10-10', 2, 0.00);
-        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT01', '2026-10-10 13:00:00', '2026-10-10 15:00:00', '2026-10-10', 3, 3000.00);
-        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT01', '2026-10-10 17:00:00', '2026-10-10 21:00:00', '2026-10-10', 4, 3000.00);
+
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT01', '2026-10-01 07:00:00', '2026-10-01 11:30:00', '2026-10-01', 1, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT01', '2026-10-01 13:00:00', '2026-10-01 17:00:00', '2026-10-01', 2, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT02', '2026-10-02 08:00:00', '2026-10-02 12:00:00', '2026-10-02', 1, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT03', '2026-10-03 07:30:00', '2026-10-03 11:30:00', '2026-10-03', 1, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT03', '2026-10-03 13:30:00', '2026-10-03 17:30:00', '2026-10-03', 2, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT03', '2026-10-03 18:30:00', '2026-10-03 21:30:00', '2026-10-03', 3, 3000.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT04', '2026-10-04 06:45:00', '2026-10-04 11:15:00', '2026-10-04', 1, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT05', '2026-10-05 08:00:00', '2026-10-05 17:00:00', '2026-10-05', 1, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT06', '2026-10-06 07:15:00', '2026-10-06 11:45:00', '2026-10-06', 1, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT07', '2026-10-07 09:00:00', '2026-10-07 15:00:00', '2026-10-07', 1, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT08', '2026-10-08 07:30:00', '2026-10-08 11:30:00', '2026-10-08', 1, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT08', '2026-10-08 13:30:00', '2026-10-08 17:30:00', '2026-10-08', 2, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT09', '2026-10-09 08:15:00', '2026-10-09 16:45:00', '2026-10-09', 1, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT10', '2026-10-10 07:00:00', '2026-10-10 09:00:00', '2026-10-10', 1, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT10', '2026-10-10 10:00:00', '2026-10-10 12:00:00', '2026-10-10', 2, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT10', '2026-10-10 13:00:00', '2026-10-10 15:00:00', '2026-10-10', 3, 3000.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT10', '2026-10-10 17:00:00', '2026-10-10 21:00:00', '2026-10-10', 4, 3000.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT11', '2026-10-11 08:30:00', '2026-10-11 11:30:00', '2026-10-11', 1, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT01', '2026-10-12 07:00:00', '2026-10-12 11:30:00', '2026-10-12', 1, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT02', '2026-10-13 13:00:00', '2026-10-13 18:00:00', '2026-10-13', 1, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT04', '2026-10-14 07:30:00', '2026-10-14 11:30:00', '2026-10-14', 1, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT05', '2026-10-15 08:00:00', '2026-10-15 12:00:00', '2026-10-15', 1, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT05', '2026-10-15 13:30:00', '2026-10-15 17:30:00', '2026-10-15', 2, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT05', '2026-10-15 18:30:00', '2026-10-15 21:00:00', '2026-10-15', 3, 3000.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT07', '2026-10-16 07:15:00', '2026-10-16 11:45:00', '2026-10-16', 1, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT09', '2026-10-17 08:30:00', '2026-10-17 16:30:00', '2026-10-17', 1, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT11', '2026-10-18 09:00:00', '2026-10-18 12:00:00', '2026-10-18', 1, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT03', '2026-10-19 07:00:00', '2026-10-19 11:30:00', '2026-10-19', 1, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT06', '2026-10-20 08:15:00', '2026-10-20 17:15:00', '2026-10-20', 1, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT08', '2026-10-21 07:45:00', '2026-10-21 11:45:00', '2026-10-21', 1, 0.00);
+
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT01', '2026-11-01 07:00:00', '2026-11-01 11:30:00', '2026-11-01', 1, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT01', '2026-11-01 13:00:00', '2026-11-01 17:00:00', '2026-11-01', 2, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT02', '2026-11-01 08:30:00', '2026-11-01 12:00:00', '2026-11-01', 1, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT03', '2026-11-02 07:15:00', '2026-11-02 11:45:00', '2026-11-02', 1, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT03', '2026-11-02 13:15:00', '2026-11-02 17:15:00', '2026-11-02', 2, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT03', '2026-11-02 18:30:00', '2026-11-02 21:30:00', '2026-11-02', 3, 3000.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT04', '2026-11-03 08:00:00', '2026-11-03 16:30:00', '2026-11-03', 1, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT05', '2026-11-03 07:30:00', '2026-11-03 11:30:00', '2026-11-03', 1, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT06', '2026-11-04 09:00:00', '2026-11-04 15:00:00', '2026-11-04', 1, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT07', '2026-11-04 06:30:00', '2026-11-04 11:30:00', '2026-11-04', 1, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT07', '2026-11-04 13:30:00', '2026-11-04 17:30:00', '2026-11-04', 2, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT07', '2026-11-04 19:00:00', '2026-11-04 22:00:00', '2026-11-04', 3, 3000.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT08', '2026-11-05 08:15:00', '2026-11-05 12:15:00', '2026-11-05', 1, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT09', '2026-11-05 07:00:00', '2026-11-05 17:00:00', '2026-11-05', 1, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT10', '2026-11-06 08:30:00', '2026-11-06 11:30:00', '2026-11-06', 1, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT10', '2026-11-06 13:30:00', '2026-11-06 17:30:00', '2026-11-06', 2, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT11', '2026-11-07 07:45:00', '2026-11-07 11:45:00', '2026-11-07', 1, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT01', '2026-11-08 09:00:00', '2026-11-08 14:00:00', '2026-11-08', 1, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT02', '2026-11-08 15:00:00', '2026-11-08 19:00:00', '2026-11-08', 1, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT04', '2026-11-09 07:30:00', '2026-11-09 11:30:00', '2026-11-09', 1, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT05', '2026-11-09 13:00:00', '2026-11-09 18:00:00', '2026-11-09', 1, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT06', '2026-11-10 08:00:00', '2026-11-10 12:00:00', '2026-11-10', 1, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT07', '2026-11-10 13:30:00', '2026-11-10 17:30:00', '2026-11-10', 1, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT08', '2026-11-11 07:15:00', '2026-11-11 11:45:00', '2026-11-11', 1, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT09', '2026-11-11 14:00:00', '2026-11-11 18:00:00', '2026-11-11', 1, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT10', '2026-11-12 08:30:00', '2026-11-12 16:30:00', '2026-11-12', 1, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT11', '2026-11-13 07:00:00', '2026-11-13 11:30:00', '2026-11-13', 1, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT11', '2026-11-13 13:00:00', '2026-11-13 17:00:00', '2026-11-13', 2, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT11', '2026-11-13 18:30:00', '2026-11-13 21:00:00', '2026-11-13', 3, 3000.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT11', '2026-11-13 21:30:00', '2026-11-13 23:00:00', '2026-11-13', 4, 3000.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT01', '2026-11-14 08:00:00', '2026-11-14 12:00:00', '2026-11-14', 1, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT03', '2026-11-15 09:15:00', '2026-11-15 15:30:00', '2026-11-15', 1, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT05', '2026-11-16 07:30:00', '2026-11-16 11:30:00', '2026-11-16', 1, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT07', '2026-11-17 08:45:00', '2026-11-17 17:00:00', '2026-11-17', 1, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT09', '2026-11-18 07:00:00', '2026-11-18 12:00:00', '2026-11-18', 1, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT10', '2026-11-19 09:30:00', '2026-11-19 14:30:00', '2026-11-19', 1, 0.00);
+        INSERT OR IGNORE INTO LuotGuiXe (MaXeThang, ThoiGianVao, ThoiGianRa, NgayGiaoDich, SoLieuLuotTrongNgay, PhuPhiPhatSinh) VALUES ('XT02', '2026-11-20 08:00:00', '2026-11-20 16:00:00', '2026-11-20', 1, 0.00);
         """)
         conn.commit()
     conn.close()
