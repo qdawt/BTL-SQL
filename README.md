@@ -1,70 +1,212 @@
-# Hệ thống quản lý Ký túc xá sinh viên (Project 2 – Yêu cầu 3)
 
-Web app **Flask + MySQL** xây dựng trên CSDL trong `database/KTXSV.sql` (bảng, trigger, dữ liệu mẫu).
-Giao diện tiếng Việt, người dùng không cần biết lập trình vẫn sử dụng được.
+# 🏢 HỆ THỐNG QUẢN LÝ KÝ TÚC XÁ SINH VIÊN
 
-## Tính năng
+**Project 2 – Môn Cơ sở dữ liệu**
 
-**Quản lý dữ liệu (thêm / sửa / xóa / tìm kiếm)**
-- Sinh viên · Phòng ở (hiển thị số người đang ở và chỗ trống) · Khách đến thăm
-- Danh mục dịch vụ · Nhật ký sử dụng dịch vụ (thành tiền = đơn giá × số lượng, tự tính)
-- Xe vé tháng (tối đa 2 xe/sinh viên) · Lượt gửi/lấy xe (2 lượt miễn phí/ngày, từ lượt 3 phụ phí 3.000đ – tự tính)
+Ứng dụng quản lý ký túc xá sinh viên được xây dựng nhằm hỗ trợ quản lý thông tin sinh viên, phòng ở, khách đến thăm, dịch vụ sinh hoạt và xe đăng ký gửi vé tháng.
 
-**4 báo cáo theo đề bài**
-1. **Hóa đơn hàng tháng** – tiền phòng (tính chẵn tháng) + dịch vụ + vé xe tháng + phụ phí gửi xe, xem theo danh sách hoặc từng người (trang chi tiết, có nút **In hóa đơn**).
-2. **Dịch vụ theo khoảng ngày** – tên dịch vụ và tổng tiền mỗi dịch vụ của sinh viên từ ngày … đến ngày …
-3. **Khách đến thăm** – theo **tuần** hoặc **tháng**, kèm số lần mỗi khách đến chơi và các ngày đến.
-4. **Doanh thu dịch vụ** – từng dịch vụ theo 12 tháng, có biểu đồ.
+Ứng dụng có giao diện tiếng Việt, hỗ trợ quản lý dữ liệu, kiểm tra các ràng buộc nghiệp vụ và tổng hợp chi phí theo tháng.
 
-**Tính năng phụ:** bảng điều khiển (thống kê, mức lấp đầy phòng), tìm kiếm, xuất CSV (mở được bằng Excel) cho cả 4 báo cáo, in hóa đơn, kiểm tra ràng buộc nghiệp vụ (phòng đầy, quá 2 xe…) kèm thông báo lỗi dễ hiểu.
+---
 
-## Cài đặt & chạy
+## 📌 1. Giới thiệu đề tài
 
-Yêu cầu: **Python 3.9+** và **MySQL 8.0.13+** (file SQL dùng `DEFAULT (CURRENT_DATE)` và `CHECK`).
+Đề tài xây dựng hệ thống quản lý ký túc xá sinh viên với các mục tiêu:
+
+- Quản lý thông tin sinh viên và phòng ở.
+- Theo dõi khách đến thăm sinh viên.
+- Quản lý danh mục và lịch sử sử dụng dịch vụ.
+- Quản lý xe đăng ký vé tháng và các lượt gửi/lấy xe.
+- Tự động tính toán chi phí và lập hóa đơn hàng tháng.
+- Cung cấp các báo cáo phục vụ công tác quản lý ký túc xá.
+
+## ✨ 2. Các chức năng chính
+
+### 2.1. Quản lý sinh viên
+- Thêm, sửa, xóa và tìm kiếm sinh viên.
+- Lưu thông tin cá nhân: mã sinh viên, số CMT/CCCD, họ tên, ngày sinh, lớp và quê quán.
+- Theo dõi phòng ở và thời gian bắt đầu ở.
+
+### 2.2. Quản lý phòng ở
+- Quản lý danh sách phòng.
+- Theo dõi loại phòng, đơn giá và sức chứa tối đa.
+- Hiển thị số người đang ở và số chỗ còn trống.
+- Kiểm tra ràng buộc khi phòng đã đủ số người.
+
+### 2.3. Quản lý khách đến thăm
+- Lưu thông tin khách đến thăm.
+- Ghi nhận sinh viên được thăm và ngày đến.
+- Tra cứu lịch sử khách đến thăm.
+
+### 2.4. Quản lý dịch vụ
+- Quản lý danh mục dịch vụ và đơn giá.
+- Ghi nhận các lần sinh viên sử dụng dịch vụ.
+- Tự động tính thành tiền theo đơn giá và số lượng.
+
+Các dịch vụ có thể bao gồm giặt là, trông xe, cho thuê xe và ăn uống.
+
+### 2.5. Quản lý xe vé tháng
+- Quản lý thông tin xe đăng ký vé tháng.
+- Kiểm tra giới hạn tối đa 2 xe vé tháng trên mỗi sinh viên.
+- Theo dõi lịch sử gửi và lấy xe.
+- Hai lượt đầu tiên trong ngày được miễn phí.
+- Từ lượt thứ ba, phụ phí được tính 3.000 đồng/lượt.
+
+## 📊 3. Các báo cáo
+
+Hệ thống hỗ trợ các báo cáo chính theo yêu cầu đề bài:
+
+| STT | Báo cáo | Nội dung |
+|---|---|---|
+| 1 | Hóa đơn hàng tháng | Tổng hợp tiền phòng, dịch vụ, vé xe tháng và phụ phí gửi xe. |
+| 2 | Dịch vụ theo khoảng ngày | Thống kê tên dịch vụ và tổng tiền từng dịch vụ mà sinh viên đã sử dụng. |
+| 3 | Khách đến thăm | Thống kê khách đến thăm theo tuần hoặc tháng và số lần đến. |
+| 4 | Doanh thu dịch vụ | Thống kê doanh thu từng dịch vụ theo tháng. |
+
+Ngoài ra, ứng dụng còn hỗ trợ:
+- Bảng điều khiển tổng quan.
+- Tìm kiếm dữ liệu.
+- Xuất báo cáo CSV.
+- Xem và in hóa đơn.
+- Thông báo khi vi phạm các ràng buộc nghiệp vụ.
+
+## 🛠️ 4. Công nghệ sử dụng
+
+| Công nghệ | Vai trò |
+|---|---|
+| Python | Xử lý nghiệp vụ và vận hành ứng dụng. |
+| Flask | Xây dựng ứng dụng và xử lý các trang giao diện. |
+| SQLite | Lưu trữ dữ liệu trong phiên bản ứng dụng hiện tại. |
+| SQL | Thiết kế bảng, khóa, quan hệ và truy vấn dữ liệu. |
+| HTML/CSS | Xây dựng giao diện người dùng. |
+| Bootstrap | Hỗ trợ bố cục và trình bày giao diện. |
+| PyWebView | Hiển thị ứng dụng trong cửa sổ desktop. |
+
+## 📁 5. Cấu trúc thư mục
+
+```text
+BTL-SQL/
+│
+├── app.py
+├── requirements.txt
+├── README.md
+│
+├── database/
+│   └── KTXSV.sql
+│
+├── templates/
+│   └── Các tệp giao diện HTML
+│
+├── static/
+│   └── Các tệp CSS và tài nguyên giao diện
+│
+├── build/
+│   └── Tài nguyên phục vụ đóng gói
+│
+├── dist/
+│   └── Các tệp ứng dụng đã đóng gói
+│
+├── app.spec
+└── KTXManager.spec
+```
+
+## 💻 6. Cài đặt và chạy ứng dụng bằng Python
+
+### Bước 1. Tải mã nguồn
 
 ```bash
-# 1. Cài thư viện
+git clone https://github.com/qdawt/BTL-SQL.git
+cd BTL-SQL
+```
+
+Hoặc tải repository dưới dạng ZIP từ GitHub và giải nén.
+
+### Bước 2. Tạo môi trường ảo
+
+Windows PowerShell:
+
+```powershell
 python -m venv .venv
-source .venv/bin/activate          # Windows: .venv\Scripts\activate
+```
+
+Kích hoạt môi trường:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+
+### Bước 3. Cài đặt thư viện
+
+```bash
+python -m pip install --upgrade pip
 pip install -r requirements.txt
-
-# 2. Cấu hình kết nối MySQL (đổi theo máy của bạn)
-export DB_HOST=localhost DB_USER=root DB_PASSWORD=mat_khau DB_NAME=ktx
-#   Windows PowerShell:  $env:DB_PASSWORD="mat_khau"
-
-# 3. Tạo CSDL + bảng + trigger + dữ liệu mẫu (đọc từ database/KTXSV.sql)
-python init_db.py            # thêm --reset để xóa và tạo lại từ đầu
-
-# 4. Chạy web
-python app.py                # mở http://127.0.0.1:5000
 ```
 
-> Nếu MySQL báo lỗi khi tạo trigger (`log_bin_trust_function_creators`), chạy với tài khoản root hoặc thực hiện
-> `SET GLOBAL log_bin_trust_function_creators = 1;`
->
-> Bạn cũng có thể tự chạy thẳng `database/KTXSV.sql` trong MySQL Workbench thay cho bước 3 (nhớ `CREATE DATABASE ktx; USE ktx;` trước).
+Nếu gặp lỗi thiếu thư viện `webview`, cài bổ sung:
 
-## Cấu trúc thư mục
-
-```
-ktx-app/
-├── app.py              # Flask: CRUD + 4 báo cáo + bảng điều khiển
-├── init_db.py          # nạp database/KTXSV.sql vào MySQL
-├── database/KTXSV.sql  # CSDL (Yêu cầu 2)
-├── templates/          # giao diện HTML (Jinja2 + Bootstrap 5)
-├── static/style.css
-└── requirements.txt
+```bash
+pip install pywebview
 ```
 
-## Ghi chú thiết kế
+### Bước 4. Khởi chạy ứng dụng
 
-- Tiền phòng tính chẵn tháng: sinh viên có phòng và `NgayBatDauO` ≤ ngày cuối tháng thì phải trả đủ tiền phòng tháng đó.
-- Vé xe tháng tính cho xe đang hiệu lực, đăng ký trước hoặc trong tháng.
-- Trigger MySQL vẫn là nơi bảo vệ dữ liệu chính; app kiểm tra thêm khi **sửa** (trigger gốc chỉ chạy khi INSERT) và tự đánh số lại lượt gửi xe trong ngày khi sửa/xóa lượt.
-- Trang web dùng CDN cho Bootstrap/Chart.js nên cần Internet khi mở giao diện.
+```bash
+python app.py
+```
 
-## Chạy chương trình bằng file exe :
-` 
-Tải file exe, file zip từ file dist
-Mở file exe, giải nén file zip để có thể bắt đầu dùng
-`
+Ứng dụng Flask sử dụng địa chỉ localhost:
+
+```text
+http://127.0.0.1:5000
+```
+
+Nếu chạy thông qua PyWebView, giao diện sẽ được hiển thị trong cửa sổ desktop.
+
+## 🖥️ 7. Sử dụng ứng dụng EXE
+
+Dự án có thư mục `dist` chứa các tệp phục vụ phiên bản đóng gói.
+
+Các bước sử dụng:
+
+1. Tải thư mục hoặc tệp ZIP chứa ứng dụng từ repository.
+2. Giải nén toàn bộ nội dung vào một thư mục.
+3. Giữ nguyên cấu trúc các tệp đi kèm.
+4. Mở tệp EXE của ứng dụng.
+5. Chờ giao diện khởi động và sử dụng các chức năng quản lý.
+
+**Lưu ý:** Không nên chỉ sao chép riêng file EXE nếu bản đóng gói có các thư viện hoặc tài nguyên đi kèm.
+
+## 🗄️ 8. Dữ liệu và cơ sở dữ liệu
+
+Ứng dụng sử dụng cơ sở dữ liệu SQLite trong phiên bản chạy hiện tại.
+
+Tệp CSDL được lưu tại:
+
+```text
+%APPDATA%\KTXManager\ktx.db
+```
+
+## 📋 9. Các quy tắc nghiệp vụ
+
+- Tiền thuê phòng được tính tròn tháng.
+- Thành tiền dịch vụ bằng đơn giá nhân số lượng sử dụng.
+- Vé xe tháng có mức phí 100.000 đồng/tháng.
+- Hai lượt gửi/lấy xe đầu tiên trong ngày được miễn phụ phí.
+- Từ lượt thứ ba, mỗi lượt phát sinh 3.000 đồng.
+- Mỗi sinh viên được đăng ký tối đa hai xe vé tháng.
+- Không cho phép xếp sinh viên vượt quá sức chứa của phòng.
+- Các dữ liệu liên quan phải đảm bảo tính hợp lệ và nhất quán.
+
+## 👥 10. Thành viên thực hiện
+
+| STT | Họ và tên |
+|---|---|
+| 1 | Đào Quang Đạt |
+| 2 | Trịnh Văn Huy |
+| 3 | Trần Hữu Bảo |s
+| 4 | Nguyễn Vũ Tuấn Anh |
+
+
+**Đề tài:** Xây dựng hệ thống quản lý ký túc xá sinh viên  
+**Môn học:** Cơ sở dữ liệu  
+**Năm thực hiện:** 2026
